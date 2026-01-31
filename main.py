@@ -1,5 +1,5 @@
 # main.py
-# Полная версия с интеграцией всех модулей
+# Полная версия с интеграцией всех модулей и меню выбора режима
 
 import sys
 import subprocess
@@ -27,6 +27,7 @@ from scripts.animations import particle_system
 from scripts.sounds import sound_manager
 from scripts.game_modes import create_mode
 from scripts.unique_systems import echo_system, gravity_morph, quantum_sys, emotion_boost
+from scripts.enemies import enemy_manager
 
 pygame.init()
 
@@ -43,6 +44,7 @@ STATE_MENU      = 0
 STATE_REGISTER  = 1
 STATE_LOGIN     = 2
 STATE_GAME      = 3
+STATE_MODE_SELECT = 4  # Новое состояние: выбор режима
 
 state = STATE_MENU
 
@@ -93,22 +95,7 @@ while running:
                             full_data = load_progress(logged_in_user)
                             player_data.update(full_data)
 
-                            player = Player(
-                                x=player_data.get("x", 200),
-                                y=player_data.get("y", 300),
-                                skin=player_data.get("skin", "default")
-                            )
-
-                            # Перки из сохранения
-                            if "perks" in player_data:
-                                player.perks = player_data["perks"]
-
-                            # Звук, режим, уникальные системы
-                            sound_manager.play_music("bg_music.mp3")  # если есть файл
-                            current_mode = create_mode("story")
-
-                            echo_system.history = []
-                            state = STATE_GAME
+                            state = STATE_MODE_SELECT  # Переходим к выбору режима
                         else:
                             message = data_or_msg
                 else:
@@ -117,6 +104,20 @@ while running:
                             username += event.unicode
                         else:
                             password += event.unicode
+
+            elif state == STATE_MODE_SELECT:
+                if event.key == K_1:
+                    current_mode = create_mode("story")
+                    player = Player(x=player_data.get("x", 200), y=player_data.get("y", 300), skin=player_data.get("skin", "default"))
+                    state = STATE_GAME
+                elif event.key == K_2:
+                    current_mode = create_mode("survival")
+                    player = Player(x=player_data.get("x", 200), y=player_data.get("y", 300), skin=player_data.get("skin", "default"))
+                    state = STATE_GAME
+                elif event.key == K_3:
+                    current_mode = create_mode("arcade")
+                    player = Player(x=player_data.get("x", 200), y=player_data.get("y", 300), skin=player_data.get("skin", "default"))
+                    state = STATE_GAME
 
             elif state == STATE_GAME:
                 if event.key == K_r:
@@ -172,6 +173,17 @@ while running:
         msg_surf = small_font.render(message, True, col)
         screen.blit(msg_surf, (WIDTH//2 - msg_surf.get_width()//2, 380))
 
+    elif state == STATE_MODE_SELECT:
+        title = font.render("Выбери режим", True, (90, 180, 255))
+        screen.blit(title, (WIDTH//2 - title.get_width()//2, 120))
+
+        txt1 = small_font.render("1 — Сюжетный режим", True, (220, 220, 220))
+        txt2 = small_font.render("2 — Выживание", True, (220, 220, 220))
+        txt3 = small_font.render("3 — Аркада", True, (220, 220, 220))
+        screen.blit(txt1, (WIDTH//2 - txt1.get_width()//2, 220))
+        screen.blit(txt2, (WIDTH//2 - txt2.get_width()//2, 270))
+        screen.blit(txt3, (WIDTH//2 - txt3.get_width()//2, 320))
+
     elif state == STATE_GAME:
         if player:
             player.update(keys)
@@ -188,6 +200,9 @@ while running:
             # Бонусы
             update_bonuses(player)
 
+            # Враги
+            enemy_manager.update(player, dt)
+
             # Сюжет и режим
             current_mode.update(player, dt, keys, {"level": player_data.get("level", 1)})
 
@@ -203,6 +218,8 @@ while running:
             echo_system.draw_echo(screen, player.image)
 
         particle_system.draw(screen)
+
+        enemy_manager.draw(screen)
 
         if current_mode:
             current_mode.draw_ui(screen, small_font)
