@@ -1,45 +1,44 @@
 # main.py
-# Главный файл игры — стабильная версия, расширяемая модулями
+# Полная версия с интеграцией всех модулей
 
 import sys
 import subprocess
+import pygame
+from pygame.locals import *
 
-# Автоматическая установка pygame один раз
+# Авто-установка pygame
 def install_pygame():
     try:
         import pygame
     except ImportError:
         print("pygame не найден → устанавливаю...")
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "pygame==2.6.0"])
-            print("pygame установлен!")
-            import pygame
-        except Exception as e:
-            print("Ошибка установки pygame:", e)
-            print("Установи вручную: python -m pip install pygame")
-            sys.exit(1)
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "pygame==2.6.0"])
+        import pygame
 
 install_pygame()
 
-import pygame
-from pygame.locals import *
-
-# Импортируем существующие модули (добавляй новые по мере создания)
+# Импорты всех модулей
 from scripts.registration import register, login
-# Пока player закомментирован — раскомментируй, когда создашь scripts/player.py
-# from scripts.player import Player
+from scripts.player import Player
+from scripts.saving import save_progress, load_progress
+from scripts.bonuses_perks import unlock_random_perk, activate_random_bonus, update_bonuses, get_perks_list, get_active_bonuses
+from scripts.storyline import story_manager
+from scripts.animations import particle_system
+from scripts.sounds import sound_manager
+from scripts.game_modes import create_mode
+from scripts.unique_systems import echo_system, gravity_morph, quantum_sys, emotion_boost
 
 pygame.init()
 
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Твоя игра")
+pygame.display.set_caption("Твоя Игра")
 clock = pygame.time.Clock()
 
 font = pygame.font.SysFont("arial", 36, bold=True)
 small_font = pygame.font.SysFont("arial", 24)
 
-# Состояния игры
+# Состояния
 STATE_MENU      = 0
 STATE_REGISTER  = 1
 STATE_LOGIN     = 2
@@ -47,30 +46,29 @@ STATE_GAME      = 3
 
 state = STATE_MENU
 
-# Переменные ввода
+# Ввод
 username = ""
 password = ""
 message = ""
-active_field = "username"  # username / password
+active_field = "username"
 
-# Данные после входа
 logged_in_user = None
 player_data = None
-player = None           # будет экземпляр Player после создания модуля
+player = None
+current_mode = None
 
 running = True
 while running:
     keys = pygame.key.get_pressed()
+    dt = clock.tick(60) / 1000.0
 
     for event in pygame.event.get():
         if event.type == QUIT:
             running = False
-
         if event.type == KEYDOWN:
             if event.key == K_ESCAPE:
                 running = False
 
-            # Ввод в полях регистрации/логина
             if state in (STATE_REGISTER, STATE_LOGIN):
                 if event.key == K_TAB:
                     active_field = "password" if active_field == "username" else "username"
@@ -87,20 +85,30 @@ while running:
                             state = STATE_MENU
                             username = ""
                             password = ""
-                    else:  # LOGIN
+                    else:
                         ok, data_or_msg = login(username.strip(), password)
                         if ok:
                             player_data = data_or_msg
                             logged_in_user = username.strip()
-                            message = f"Привет, {logged_in_user}!"
-                            state = STATE_GAME
+                            full_data = load_progress(logged_in_user)
+                            player_data.update(full_data)
 
-                            # Здесь создаём игрока, когда будет модуль player.py
-                            # player = Player(
-                            #     x=player_data.get("position", [100, 100])[0],
-                            #     y=player_data.get("position", [100, 100])[1],
-                            #     skin=player_data["skins"][0] if player_data["skins"] else "default"
-                            # )
+                            player = Player(
+                                x=player_data.get("x", 200),
+                                y=player_data.get("y", 300),
+                                skin=player_data.get("skin", "default")
+                            )
+
+                            # Перки из сохранения
+                            if "perks" in player_data:
+                                player.perks = player_data["perks"]
+
+                            # Звук, режим, уникальные системы
+                            sound_manager.play_music("bg_music.mp3")  # если есть файл
+                            current_mode = create_mode("story")
+
+                            echo_system.history = []
+                            state = STATE_GAME
                         else:
                             message = data_or_msg
                 else:
@@ -110,15 +118,19 @@ while running:
                         else:
                             password += event.unicode
 
-            # В игре — возврат в меню
             elif state == STATE_GAME:
                 if event.key == K_r:
+                    # Сохраняем перед выходом
+                    if player and logged_in_user:
+                        progress = player.get_save_data()
+                        progress["level"] = player_data.get("level", 1)
+                        progress["perks"] = get_perks_list(player)
+                        save_progress(logged_in_user, progress)
                     state = STATE_MENU
-                    username = ""
-                    password = ""
                     logged_in_user = None
-                    player_data = None
                     player = None
+                    current_mode = None
+                    sound_manager.stop_music()
 
     screen.fill((18, 18, 45))
 
@@ -131,13 +143,10 @@ while running:
         screen.blit(txt1, (WIDTH//2 - txt1.get_width()//2, 280))
         screen.blit(txt2, (WIDTH//2 - txt2.get_width()//2, 340))
 
-        hint = small_font.render("Нажми 1 или 2", True, (140, 140, 140))
-        screen.blit(hint, (WIDTH//2 - hint.get_width()//2, 420))
-
-        if keys[K_1]: 
+        if keys[K_1]:
             state = STATE_REGISTER
             message = ""
-        if keys[K_2]: 
+        if keys[K_2]:
             state = STATE_LOGIN
             message = ""
 
@@ -164,26 +173,57 @@ while running:
         screen.blit(msg_surf, (WIDTH//2 - msg_surf.get_width()//2, 380))
 
     elif state == STATE_GAME:
-        # Пока просто заглушка — позже здесь будет игрок, уровни, перки и т.д.
-        welcome = font.render(f"Привет, {logged_in_user}!", True, (100, 255, 120))
-        screen.blit(welcome, (WIDTH//2 - welcome.get_width()//2, 180))
+        if player:
+            player.update(keys)
 
-        info = small_font.render("Пока пустой режим игры", True, (180, 180, 220))
-        screen.blit(info, (WIDTH//2 - info.get_width()//2, 280))
+            # Уникальные механики
+            echo_system.record(player)
+            gravity_morph.update(dt, player)
+            quantum_sys.update(player)
+            emotion_boost.update(dt, player)
 
-        lvl = small_font.render(f"Уровень: {player_data.get('level', 1)}", True, (220, 220, 100))
-        screen.blit(lvl, (WIDTH//2 - lvl.get_width()//2, 340))
+            # Частицы
+            particle_system.update(dt)
 
-        hint = small_font.render("R — вернуться в меню", True, (140, 140, 140))
-        screen.blit(hint, (WIDTH//2 - hint.get_width()//2, 500))
+            # Бонусы
+            update_bonuses(player)
 
-        # Когда добавишь player.py — раскомментируй здесь:
-        # if player:
-        #     player.update(keys)
-        #     player.draw(screen)
+            # Сюжет и режим
+            current_mode.update(player, dt, keys, {"level": player_data.get("level", 1)})
+
+            # Звук шагов
+            if keys[K_a] or keys[K_d] or keys[K_LEFT] or keys[K_RIGHT]:
+                sound_manager.play("step", volume=0.4)
+
+        # Рисование
+        pygame.draw.rect(screen, (80, 40, 0), (0, HEIGHT - 100, WIDTH, 100))  # пол
+
+        if player:
+            player.draw(screen)
+            echo_system.draw_echo(screen, player.image)
+
+        particle_system.draw(screen)
+
+        if current_mode:
+            current_mode.draw_ui(screen, small_font)
+
+        emotion_boost.draw_bar(screen)
+        gravity_morph.draw_indicator(screen, small_font)
+
+        info = small_font.render(f"{logged_in_user} | Жизни: {player.lives if player else '?'} | Перки: {', '.join(get_perks_list(player))[:50]}...", True, (220, 220, 100))
+        screen.blit(info, (20, 20))
+
+        hint = small_font.render("R — меню | SPACE — прыжок | A/D — движение", True, (180, 180, 220))
+        screen.blit(hint, (WIDTH//2 - hint.get_width()//2, HEIGHT - 40))
 
     pygame.display.flip()
-    clock.tick(60)
+
+# Сохраняем при выходе
+if player and logged_in_user:
+    progress = player.get_save_data()
+    progress["level"] = player_data.get("level", 1)
+    progress["perks"] = get_perks_list(player)
+    save_progress(logged_in_user, progress)
 
 pygame.quit()
 sys.exit()
