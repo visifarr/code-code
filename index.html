@@ -1,473 +1,1128 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Краски Рассвета — Music Hub</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Краски Рассвета — Music Hub</title>
 
-<style>
-:root{
-  --bg-main:#0b0d14;
-  --panel:#11131d;
-  --panel-soft:#16192a;
+  <style>
+    :root{
+      /* масштаб */
+      --s: 1;
 
-  /* РАССВЕТНЫЕ ЦВЕТА */
-  --sun-main:#ffb347;
-  --sun-pink:#ff6fae;
-  --sun-blue:#6ecbff;
+      /* базовые */
+      --bg:#0b0d14;
+      --panel: rgba(17,19,29,.86);
+      --stroke: rgba(255,255,255,.07);
+      --text:#f1f3ff;
+      --muted:#a7abc8;
 
-  --text:#f1f3ff;
-  --text-soft:#a7abc8;
+      /* рассветные */
+      --sun: #ffb347;
+      --pink:#ff6fae;
+      --sky:#6ecbff;
 
-  --radius:16px;
-  --blur:12px;
-}
+      /* формы */
+      --r: calc(16px * var(--s));
+      --blur: 12px;
+      --pad: calc(12px * var(--s));
+      --gap: calc(12px * var(--s));
 
-/* RESET */
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
+      /* плеер */
+      --playerH: calc(92px * var(--s));
 
-body{
-  height:100vh;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-  background:
-    radial-gradient(900px 600px at 20% -10%, rgba(255,179,71,.35), transparent 60%),
-    radial-gradient(800px 500px at 90% 10%, rgba(110,203,255,.25), transparent 60%),
-    radial-gradient(700px 400px at 50% 90%, rgba(255,111,174,.20), transparent 65%),
-    var(--bg-main);
-  color:var(--text);
-  overflow:hidden;
-}
+      /* эффекты */
+      --sunriseOpacity: .55;
+      --rainOn: 0; /* 0/1 */
+      --rainIntensity: 22; /* 0..80 */
+      --sunriseOn: 1; /* 0/1 */
+    }
 
-/* ====== LAYOUT ====== */
+    *{ box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: var(--text);
+      background: var(--bg);
+      overflow:hidden;
+    }
 
-.app{
-  display:grid;
-  grid-template-columns:260px 1fr;
-  grid-template-rows:1fr 90px;
-  gap:12px;
-  height:100%;
-  padding:12px;
-}
+    /* фон-рассвет */
+    .bg{
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(900px 600px at 18% -10%, color-mix(in srgb, var(--sun) 35%, transparent), transparent 60%),
+        radial-gradient(800px 520px at 92% 8%, color-mix(in srgb, var(--sky) 28%, transparent), transparent 62%),
+        radial-gradient(700px 420px at 50% 92%, color-mix(in srgb, var(--pink) 22%, transparent), transparent 68%),
+        var(--bg);
+      filter: saturate(1.05);
+    }
 
-/* ====== SIDEBAR ====== */
+    .sunriseOverlay{
+      position: fixed;
+      inset: -20%;
+      z-index: 0;
+      pointer-events:none;
+      opacity: calc(var(--sunriseOpacity) * var(--sunriseOn));
+      background:
+        radial-gradient(900px 420px at 30% 10%, color-mix(in srgb, var(--sun) 45%, transparent), transparent 60%),
+        radial-gradient(780px 380px at 70% 20%, color-mix(in srgb, var(--pink) 35%, transparent), transparent 65%),
+        radial-gradient(820px 520px at 50% 100%, color-mix(in srgb, var(--sky) 26%, transparent), transparent 70%);
+      animation: sunriseMove 18s ease-in-out infinite;
+      transform-origin: 50% 50%;
+    }
 
-.sidebar{
-  background:rgba(17,19,29,.85);
-  backdrop-filter:blur(var(--blur));
-  border-radius:var(--radius);
-  padding:16px;
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-  border:1px solid rgba(255,255,255,.06);
-}
+    @keyframes sunriseMove{
+      0%   { transform: translate3d(-1.5%, -1.0%, 0) scale(1.02); filter: blur(0px); }
+      50%  { transform: translate3d( 1.8%,  1.2%, 0) scale(1.05); filter: blur(1px); }
+      100% { transform: translate3d(-1.5%, -1.0%, 0) scale(1.02); filter: blur(0px); }
+    }
 
-.logo{
-  font-weight:900;
-  font-size:18px;
-  background:linear-gradient(90deg,var(--sun-main),var(--sun-pink));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
+    /* дождь */
+    .rain{
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events:none;
+      opacity: calc(.9 * var(--rainOn));
+      overflow:hidden;
+      mix-blend-mode: screen;
+    }
+    .drop{
+      position:absolute;
+      top:-20vh;
+      width: 2px;
+      height: 18vh;
+      background: linear-gradient(to bottom, transparent, rgba(200,240,255,.30), transparent);
+      border-radius: 999px;
+      filter: blur(.1px);
+      animation: fall linear infinite;
+    }
+    @keyframes fall{
+      to { transform: translateY(140vh); }
+    }
 
-.nav{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
+    /* приложение */
+    .app{
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: grid;
+      grid-template-columns: calc(260px * var(--s)) 1fr;
+      grid-template-rows: 1fr var(--playerH);
+      gap: var(--gap);
+      padding: var(--pad);
+    }
 
-.nav button{
-  background:none;
-  border:none;
-  color:var(--text);
-  text-align:left;
-  padding:12px 14px;
-  border-radius:12px;
-  font-weight:700;
-  cursor:pointer;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
+    .cardPanel{
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: var(--r);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      box-shadow: 0 16px 44px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
 
-.nav button:hover{
-  background:rgba(255,255,255,.06);
-}
+    /* sidebar */
+    .sidebar{
+      grid-column:1;
+      grid-row:1;
+      padding: calc(14px * var(--s));
+      display:flex;
+      flex-direction:column;
+      gap: calc(16px * var(--s));
+    }
+    .logo{
+      font-weight: 950;
+      font-size: calc(18px * var(--s));
+      letter-spacing: .2px;
+      background: linear-gradient(90deg, var(--sun), var(--pink));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      user-select:none;
+    }
 
-.nav button.active{
-  background:linear-gradient(90deg,rgba(255,179,71,.25),rgba(255,111,174,.15));
-  border:1px solid rgba(255,179,71,.4);
-}
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap: calc(10px * var(--s));
+    }
+    .nav button{
+      width:100%;
+      border:none;
+      background: transparent;
+      color: var(--text);
+      padding: calc(12px * var(--s)) calc(12px * var(--s));
+      border-radius: calc(12px * var(--s));
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      border: 1px solid transparent;
+      font-weight: 800;
+      font-size: calc(13px * var(--s));
+    }
+    .nav button:hover{
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.05);
+    }
+    .nav button.active{
+      background: linear-gradient(90deg, color-mix(in srgb, var(--sun) 24%, transparent), color-mix(in srgb, var(--pink) 14%, transparent));
+      border-color: color-mix(in srgb, var(--sun) 30%, transparent);
+    }
 
-.key{
-  font-size:11px;
-  opacity:.6;
-}
+    .k{
+      font-size: calc(11px * var(--s));
+      color: rgba(255,255,255,.68);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      padding: 3px 8px;
+      border-radius: 999px;
+      flex:0 0 auto;
+    }
 
-/* ====== MAIN ====== */
+    .hint{
+      margin-top:auto;
+      color: rgba(255,255,255,.70);
+      font-weight: 650;
+      font-size: calc(11px * var(--s));
+      line-height: 1.35;
+      opacity: .9;
+      padding: calc(10px * var(--s));
+      border-radius: calc(12px * var(--s));
+      border: 1px solid rgba(255,255,255,.06);
+      background: rgba(255,255,255,.03);
+    }
 
-.main{
-  background:rgba(17,19,29,.85);
-  backdrop-filter:blur(var(--blur));
-  border-radius:var(--radius);
-  padding:16px;
-  display:flex;
-  flex-direction:column;
-  border:1px solid rgba(255,255,255,.06);
-}
+    /* main */
+    .main{
+      grid-column:2;
+      grid-row:1;
+      display:flex;
+      flex-direction:column;
+    }
 
-/* SEARCH BAR */
+    .topbar{
+      padding: calc(12px * var(--s));
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      display:flex;
+      gap: calc(10px * var(--s));
+      align-items:center;
+    }
 
-.topbar{
-  display:flex;
-  gap:12px;
-}
+    .search{
+      flex:1;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      padding: calc(10px * var(--s)) calc(12px * var(--s));
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 999px;
+    }
+    .search input{
+      width:100%;
+      border:none;
+      outline:none;
+      background: transparent;
+      color: var(--text);
+      font-size: calc(13px * var(--s));
+      font-weight: 700;
+    }
+    .chip{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.90);
+      border-radius: 999px;
+      padding: calc(9px * var(--s)) calc(12px * var(--s));
+      font-weight: 900;
+      font-size: calc(12px * var(--s));
+      cursor:pointer;
+    }
+    .chip:hover{ background: rgba(255,255,255,.07); }
 
-.search{
-  flex:1;
-  background:rgba(255,255,255,.05);
-  border-radius:999px;
-  padding:10px 14px;
-  display:flex;
-  gap:10px;
-  align-items:center;
-  border:1px solid rgba(255,255,255,.08);
-}
+    .content{
+      padding: calc(14px * var(--s));
+      overflow:auto;
+    }
 
-.search input{
-  background:none;
-  border:none;
-  outline:none;
-  color:white;
-  width:100%;
-  font-size:14px;
-}
+    .hero{
+      padding: calc(18px * var(--s));
+      border-radius: calc(18px * var(--s));
+      border: 1px solid rgba(255,255,255,.08);
+      background:
+        radial-gradient(700px 280px at 24% 0%, color-mix(in srgb, var(--sun) 22%, transparent), transparent 60%),
+        radial-gradient(640px 280px at 78% 0%, color-mix(in srgb, var(--sky) 20%, transparent), transparent 65%),
+        rgba(255,255,255,.03);
+    }
+    .hero h1{
+      margin:0;
+      font-size: calc(22px * var(--s));
+      letter-spacing:.2px;
+    }
+    .hero p{
+      margin: 6px 0 0;
+      color: rgba(255,255,255,.72);
+      font-weight: 650;
+      font-size: calc(12px * var(--s));
+    }
 
-/* ====== CONTENT ====== */
+    .section{
+      margin-top: calc(16px * var(--s));
+    }
+    .sectionHead{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 10px;
+      margin-bottom: calc(10px * var(--s));
+    }
+    .sectionHead h2{
+      margin:0;
+      font-size: calc(15px * var(--s));
+      font-weight: 950;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(calc(160px * var(--s)), 1fr));
+      gap: calc(12px * var(--s));
+    }
 
-.content{
-  margin-top:14px;
-  overflow:auto;
-  padding-right:6px;
-}
+    .card{
+      position:relative;
+      padding: calc(10px * var(--s));
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: calc(14px * var(--s));
+      cursor:pointer;
+      transition: .15s ease;
+    }
+    .card:hover{
+      transform: translateY(-2px);
+      background: rgba(255,255,255,.07);
+      border-color: rgba(255,255,255,.10);
+    }
+    .cover{
+      width:100%;
+      aspect-ratio: 1/1;
+      border-radius: calc(12px * var(--s));
+      background: linear-gradient(135deg, var(--sun), var(--pink), var(--sky));
+    }
+    .card h3{
+      margin: calc(8px * var(--s)) 2px 0;
+      font-size: calc(13px * var(--s));
+      font-weight: 950;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .card span{
+      display:block;
+      margin: 3px 2px 0;
+      font-size: calc(11px * var(--s));
+      color: rgba(255,255,255,.68);
+      font-weight: 650;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
 
-/* HERO */
+    .fab{
+      position:absolute;
+      right: calc(12px * var(--s));
+      bottom: calc(58px * var(--s));
+      width: calc(40px * var(--s));
+      height: calc(40px * var(--s));
+      border-radius: 999px;
+      border: none;
+      cursor:pointer;
+      font-weight: 1000;
+      background: var(--sun);
+      color:#111;
+      box-shadow: 0 16px 34px rgba(0,0,0,.45);
+      opacity:0;
+      transform: translateY(10px);
+      transition:.15s ease;
+    }
+    .card:hover .fab{
+      opacity:1;
+      transform: translateY(0);
+    }
 
-.hero{
-  padding:18px;
-  border-radius:18px;
-  background:
-    radial-gradient(600px 300px at 30% 0%, rgba(255,179,71,.25), transparent 60%),
-    radial-gradient(500px 300px at 80% 0%, rgba(110,203,255,.25), transparent 60%),
-    rgba(255,255,255,.03);
-  border:1px solid rgba(255,255,255,.08);
-}
+    /* player */
+    .player{
+      grid-column: 1 / span 2;
+      grid-row:2;
+      padding: calc(12px * var(--s)) calc(14px * var(--s));
+      display:grid;
+      grid-template-columns: 1.1fr 1.4fr 1.1fr;
+      align-items:center;
+      gap: calc(12px * var(--s));
+    }
+    .now{
+      display:flex;
+      align-items:center;
+      gap: calc(10px * var(--s));
+      min-width:0;
+    }
+    .art{
+      width: calc(54px * var(--s));
+      height: calc(54px * var(--s));
+      border-radius: calc(14px * var(--s));
+      background: linear-gradient(135deg, rgba(255,255,255,.08), color-mix(in srgb, var(--sun) 22%, transparent));
+      border: 1px solid rgba(255,255,255,.10);
+      flex:0 0 auto;
+    }
+    .meta{
+      min-width:0;
+    }
+    .track{
+      font-weight: 950;
+      font-size: calc(13px * var(--s));
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .artist{
+      margin-top: 4px;
+      font-weight: 700;
+      font-size: calc(11px * var(--s));
+      color: rgba(255,255,255,.68);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
 
-.hero h1{
-  font-size:22px;
-}
+    .center{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: calc(8px * var(--s));
+    }
+    .ctrls{
+      display:flex;
+      align-items:center;
+      gap: calc(10px * var(--s));
+    }
+    .btn{
+      width: calc(38px * var(--s));
+      height: calc(38px * var(--s));
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.92);
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+      font-weight: 900;
+      user-select:none;
+    }
+    .btn:hover{ background: rgba(255,255,255,.08); }
+    .btn.play{
+      width: calc(42px * var(--s));
+      height: calc(42px * var(--s));
+      background: var(--sun);
+      border-color: color-mix(in srgb, var(--sun) 38%, transparent);
+      color:#151515;
+    }
 
-.hero p{
-  margin-top:6px;
-  color:var(--text-soft);
-}
+    .bar{
+      width: min(calc(560px * var(--s)), 100%);
+      display:flex;
+      align-items:center;
+      gap: calc(10px * var(--s));
+      font-size: calc(11px * var(--s));
+      color: rgba(255,255,255,.70);
+      font-weight: 750;
+    }
+    .prog{
+      flex:1;
+      height: calc(6px * var(--s));
+      border-radius: 999px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(0,0,0,.35);
+      overflow:hidden;
+      cursor:pointer;
+    }
+    .prog > i{
+      display:block;
+      height:100%;
+      width: 35%;
+      background: rgba(255,255,255,.75);
+      border-radius: 999px;
+    }
 
-/* GRID */
+    .right{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap: calc(10px * var(--s));
+    }
+    .vol{
+      width: calc(130px * var(--s));
+      height: calc(6px * var(--s));
+      border-radius: 999px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(0,0,0,.35);
+      overflow:hidden;
+      cursor:pointer;
+    }
+    .vol > i{
+      display:block;
+      height:100%;
+      width: 55%;
+      background: rgba(255,255,255,.70);
+      border-radius: 999px;
+    }
 
-.section{
-  margin-top:18px;
-}
+    /* settings modal */
+    .modalWrap{
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display:none;
+      place-items:center;
+      background: rgba(0,0,0,.45);
+      padding: 18px;
+    }
+    .modal{
+      width: min(720px, 96vw);
+      border-radius: calc(18px * var(--s));
+      background: rgba(17,19,29,.92);
+      border: 1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      box-shadow: 0 30px 90px rgba(0,0,0,.65);
+      overflow:hidden;
+    }
+    .modalHead{
+      padding: calc(14px * var(--s)) calc(14px * var(--s));
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .modalHead h3{
+      margin:0;
+      font-size: calc(14px * var(--s));
+      font-weight: 950;
+    }
+    .x{
+      border:none;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(255,255,255,.92);
+      width: calc(36px * var(--s));
+      height: calc(36px * var(--s));
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight: 950;
+    }
+    .modalBody{
+      padding: calc(14px * var(--s));
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: calc(12px * var(--s));
+    }
+    .group{
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: calc(14px * var(--s));
+      padding: calc(12px * var(--s));
+    }
+    .group h4{
+      margin:0 0 10px 0;
+      font-size: calc(13px * var(--s));
+      font-weight: 950;
+    }
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      margin-top: 10px;
+      color: rgba(255,255,255,.86);
+      font-weight: 750;
+      font-size: calc(12px * var(--s));
+    }
+    .row input[type="range"]{ width: 55%; }
+    .row input[type="color"]{
+      width: 46px; height: 34px; border:none; padding:0; background: transparent;
+    }
+    .note{
+      margin-top: 10px;
+      color: rgba(255,255,255,.65);
+      font-size: calc(11px * var(--s));
+      line-height: 1.35;
+    }
 
-.section h2{
-  font-size:16px;
-  margin-bottom:10px;
-}
+    /* embed block */
+    .embedBox{
+      margin-top: calc(14px * var(--s));
+      padding: calc(12px * var(--s));
+      border-radius: calc(16px * var(--s));
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+    }
+    .embedBox h3{
+      margin: 0 0 10px 0;
+      font-size: calc(14px * var(--s));
+      font-weight: 950;
+    }
+    .embeds{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: calc(12px * var(--s));
+    }
+    iframe{
+      width: 100%;
+      height: calc(152px * var(--s));
+      border: 0;
+      border-radius: calc(14px * var(--s));
+      background: rgba(0,0,0,.2);
+    }
 
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-  gap:12px;
-}
+    /* scroll */
+    .content::-webkit-scrollbar{ width: 10px; }
+    .content::-webkit-scrollbar-thumb{
+      background: rgba(255,255,255,.10);
+      border-radius: 999px;
+      border: 2px solid rgba(0,0,0,0);
+      background-clip: padding-box;
+    }
 
-/* CARD */
-
-.card{
-  background:rgba(255,255,255,.04);
-  border-radius:14px;
-  padding:10px;
-  cursor:pointer;
-  transition:.15s;
-  border:1px solid rgba(255,255,255,.06);
-  position:relative;
-}
-
-.card:hover{
-  transform:translateY(-2px);
-  background:rgba(255,255,255,.07);
-}
-
-.cover{
-  aspect-ratio:1/1;
-  border-radius:12px;
-  background:
-    linear-gradient(135deg,var(--sun-main),var(--sun-pink),var(--sun-blue));
-}
-
-.card h3{
-  font-size:13px;
-  margin-top:8px;
-}
-
-.card span{
-  font-size:11px;
-  color:var(--text-soft);
-}
-
-/* PLAY BUTTON */
-
-.playBtn{
-  position:absolute;
-  bottom:58px;
-  right:12px;
-  width:38px;
-  height:38px;
-  border-radius:50%;
-  border:none;
-  background:var(--sun-main);
-  font-weight:900;
-  cursor:pointer;
-  display:none;
-}
-
-.card:hover .playBtn{
-  display:block;
-}
-
-/* ====== PLAYER ====== */
-
-.player{
-  grid-column:1/3;
-  background:rgba(17,19,29,.9);
-  backdrop-filter:blur(var(--blur));
-  border-radius:var(--radius);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:14px 18px;
-  border:1px solid rgba(255,255,255,.06);
-}
-
-.track{
-  font-weight:700;
-}
-
-.controls{
-  display:flex;
-  gap:12px;
-}
-
-.controls button{
-  background:rgba(255,255,255,.08);
-  border:none;
-  width:38px;
-  height:38px;
-  border-radius:50%;
-  cursor:pointer;
-  color:white;
-}
-
-.controls button.main{
-  background:var(--sun-main);
-  color:black;
-  font-weight:900;
-}
-
-/* ====== SCROLL ====== */
-
-.content::-webkit-scrollbar{
-  width:6px;
-}
-.content::-webkit-scrollbar-thumb{
-  background:rgba(255,255,255,.15);
-  border-radius:999px;
-}
-</style>
+    /* mobile fallback */
+    @media (max-width: 980px){
+      body{ overflow:auto; }
+      .app{
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr var(--playerH);
+      }
+      .sidebar{ grid-column:1; grid-row:1; }
+      .main{ grid-column:1; grid-row:2; }
+      .player{ grid-column:1; grid-row:3; grid-template-columns: 1fr; }
+      .right{ justify-content:center; }
+      .embeds{ grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 
 <body>
+  <div class="bg"></div>
+  <div class="sunriseOverlay" id="sunriseOverlay"></div>
+  <div class="rain" id="rain"></div>
 
-<div class="app">
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="cardPanel sidebar" id="sidebar">
+      <div class="logo">Краски Рассвета</div>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
+      <div class="nav" id="nav">
+        <button class="active" data-page="home">🏠 Главная <span class="k">H</span></button>
+        <button data-page="search">🔍 Поиск <span class="k">S</span></button>
+        <button data-page="playlists">🎵 Плейлисты <span class="k">P</span></button>
+        <button data-page="library">📚 Библиотека <span class="k">B</span></button>
+        <button data-page="settings">⚙ Настройки <span class="k">G</span></button>
+      </div>
 
-<div class="logo">Краски Рассвета</div>
+      <div class="hint">
+        Колесо мыши по левой панели: переключает вкладки<br/>
+        Горячие: H/S/P/B/G<br/>
+        Space: play/pause
+      </div>
+    </aside>
 
-<div class="nav">
-<button class="active" data-page="home">🏠 Главная <span class="key">H</span></button>
-<button data-page="search">🔍 Поиск <span class="key">S</span></button>
-<button data-page="playlists">🎵 Плейлисты <span class="key">P</span></button>
-<button data-page="library">📚 Библиотека <span class="key">B</span></button>
-</div>
+    <!-- MAIN -->
+    <main class="cardPanel main" id="main">
+      <div class="topbar">
+        <div class="search">
+          <span>🔍</span>
+          <input id="searchInput" placeholder="Поиск треков, плейлистов..." autocomplete="off" />
+        </div>
+        <button class="chip" id="openSettingsBtn">Настройки</button>
+      </div>
 
-</div>
+      <div class="content" id="content">
+        <!-- HOME -->
+        <section id="page-home">
+          <div class="hero">
+            <h1>Добро пожаловать</h1>
+            <p>Музыкальный рассвет. Твоя атмосфера. Управление мышкой и клавиатурой.</p>
+          </div>
 
-<!-- MAIN -->
-<div class="main">
+          <div class="section">
+            <div class="sectionHead">
+              <h2>Для тебя</h2>
+            </div>
+            <div class="grid" id="homeGrid"></div>
+          </div>
 
-<div class="topbar">
-<div class="search">
-🔍
-<input id="searchInput" placeholder="Поиск треков, плейлистов...">
-</div>
-</div>
+          <div class="embedBox">
+            <h3>Встроенные треки (Spotify Embed)</h3>
+            <div class="embeds">
+              <!-- можно заменить на свои ссылки -->
+              <iframe
+                src="https://open.spotify.com/embed/track/11dFghVXANMlKmJXsNCbNl"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"></iframe>
 
-<div class="content">
+              <iframe
+                src="https://open.spotify.com/embed/track/7GhIk7Il098yCjg4BQjzvb"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"></iframe>
+            </div>
+            <div class="note">
+              Это именно “встройка” Spotify. Полный “свой” стрим из Spotify без embed обычно недоступен из-за ограничений контента/DRM.
+            </div>
+          </div>
+        </section>
 
-<!-- HOME -->
-<div id="page-home">
+        <!-- SEARCH -->
+        <section id="page-search" style="display:none">
+          <div class="hero">
+            <h1>Поиск</h1>
+            <p>Нажми S, курсор станет в строку поиска. Пока это демо-фильтр карточек на главной.</p>
+          </div>
+        </section>
 
-<div class="hero">
-<h1>Добро пожаловать</h1>
-<p>Музыкальный рассвет. Твоя атмосфера. Управление с клавиатуры.</p>
-</div>
+        <!-- PLAYLISTS -->
+        <section id="page-playlists" style="display:none">
+          <div class="hero">
+            <h1>Плейлисты</h1>
+            <p>Здесь будут публичные плейлисты и твои. Пока демо.</p>
+          </div>
+        </section>
 
-<div class="section">
-<h2>Для тебя</h2>
-<div class="grid" id="homeGrid"></div>
-</div>
+        <!-- LIBRARY -->
+        <section id="page-library" style="display:none">
+          <div class="hero">
+            <h1>Библиотека</h1>
+            <p>Сохранённое. Пока демо.</p>
+          </div>
+        </section>
 
-</div>
+        <!-- SETTINGS PAGE (optional, also via modal) -->
+        <section id="page-settings" style="display:none">
+          <div class="hero">
+            <h1>Настройки</h1>
+            <p>Открой окно настроек кнопкой или клавишей G.</p>
+          </div>
+        </section>
+      </div>
+    </main>
 
-<!-- SEARCH -->
-<div id="page-search" style="display:none">
-<div class="hero">
-<h1>Поиск</h1>
-<p>Нажми S и начинай печатать</p>
-</div>
-</div>
+    <!-- PLAYER -->
+    <footer class="cardPanel player">
+      <div class="now">
+        <div class="art"></div>
+        <div class="meta">
+          <div class="track" id="trackName">Neon Sunrise</div>
+          <div class="artist" id="artistName">Demo Artist</div>
+        </div>
+      </div>
 
-<!-- PLAYLISTS -->
-<div id="page-playlists" style="display:none">
-<div class="hero">
-<h1>Плейлисты</h1>
-<p>Твои и публичные подборки</p>
-</div>
-</div>
+      <div class="center">
+        <div class="ctrls">
+          <button class="btn" id="prevBtn" title="Назад">⏮</button>
+          <button class="btn play" id="playBtn" title="Играть/Пауза">▶</button>
+          <button class="btn" id="nextBtn" title="Вперёд">⏭</button>
+        </div>
+        <div class="bar">
+          <span id="tCur">0:42</span>
+          <div class="prog" id="prog">
+            <i id="progFill"></i>
+          </div>
+          <span id="tMax">3:21</span>
+        </div>
+      </div>
 
-<!-- LIBRARY -->
-<div id="page-library" style="display:none">
-<div class="hero">
-<h1>Библиотека</h1>
-<p>Сохранённые треки</p>
-</div>
-</div>
+      <div class="right">
+        <button class="btn" id="likeBtn" title="Лайк">♡</button>
+        <div class="vol" id="vol"><i id="volFill"></i></div>
+      </div>
+    </footer>
+  </div>
 
-</div>
-</div>
+  <!-- SETTINGS MODAL -->
+  <div class="modalWrap" id="modalWrap">
+    <div class="modal">
+      <div class="modalHead">
+        <h3>Настройки интерфейса</h3>
+        <button class="x" id="closeModalBtn">✕</button>
+      </div>
 
-<!-- PLAYER -->
-<div class="player">
+      <div class="modalBody">
+        <div class="group">
+          <h4>Размер и прозрачность</h4>
 
-<div class="track" id="trackName">Neon Sunrise — Demo Artist</div>
+          <div class="row">
+            <span>Масштаб UI</span>
+            <input id="scaleRange" type="range" min="0.85" max="1.25" step="0.01" value="1">
+          </div>
 
-<div class="controls">
-<button>⏮</button>
-<button id="playBtn" class="main">▶</button>
-<button>⏭</button>
-</div>
+          <div class="row">
+            <span>Сила рассвета</span>
+            <input id="sunOpacity" type="range" min="0" max="1" step="0.01" value="0.55">
+          </div>
 
-</div>
+          <div class="note">
+            Масштаб сохраняется в браузере (localStorage).
+          </div>
+        </div>
 
-</div>
+        <div class="group">
+          <h4>Цвет и эффекты</h4>
 
-<script>
+          <div class="row">
+            <span>Основной цвет</span>
+            <input id="accentColor" type="color" value="#ffb347" />
+          </div>
 
-// ===== DEMO DATA =====
-const demoPlaylists = [
-  "Sunrise Chill",
-  "Morning Energy",
-  "Golden Hour",
-  "Night Ride",
-  "Soft Pop",
-  "Dream Flow"
-];
+          <div class="row">
+            <span>Рассвет</span>
+            <input id="sunriseToggle" type="range" min="0" max="1" step="1" value="1">
+          </div>
 
-// ===== CREATE CARDS =====
+          <div class="row">
+            <span>Дождь</span>
+            <input id="rainToggle" type="range" min="0" max="1" step="1" value="0">
+          </div>
 
-const grid = document.getElementById("homeGrid");
+          <div class="row">
+            <span>Интенсивность дождя</span>
+            <input id="rainIntensity" type="range" min="0" max="80" step="1" value="22">
+          </div>
 
-demoPlaylists.forEach(name=>{
-  const card = document.createElement("div");
-  card.className = "card";
-  card.innerHTML = `
-    <div class="cover"></div>
-    <button class="playBtn">▶</button>
-    <h3>${name}</h3>
-    <span>Плейлист</span>
-  `;
-  grid.appendChild(card);
-});
+          <div class="note">
+            Дождь — это визуальный слой, не мешает кликам.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-// ===== NAVIGATION =====
+  <script>
+    // ====== DEMO DATA ======
+    const demoPlaylists = [
+      { title: "Sunrise Chill", desc: "Плейлист" },
+      { title: "Morning Energy", desc: "Плейлист" },
+      { title: "Golden Hour", desc: "Плейлист" },
+      { title: "Night Ride", desc: "Плейлист" },
+      { title: "Soft Pop", desc: "Плейлист" },
+      { title: "Dream Flow", desc: "Плейлист" },
+    ];
 
-const pages = ["home","search","playlists","library"];
-const buttons = document.querySelectorAll(".nav button");
+    // ====== HELPERS ======
+    const $ = (s) => document.querySelector(s);
+    const root = document.documentElement;
 
-function openPage(name){
-  pages.forEach(p=>{
-    document.getElementById("page-"+p).style.display = (p===name)?"block":"none";
-  });
+    const pages = ["home","search","playlists","library","settings"];
+    let pageIndex = 0;
 
-  buttons.forEach(b=>{
-    b.classList.toggle("active", b.dataset.page===name);
-  });
+    function setActiveNav(name){
+      document.querySelectorAll("#nav button").forEach(btn=>{
+        btn.classList.toggle("active", btn.dataset.page === name);
+      });
+    }
 
-  if(name==="search"){
-    document.getElementById("searchInput").focus();
-  }
-}
+    function openPage(name, opts = { focusSearch:false }){
+      pages.forEach(p=>{
+        const el = document.getElementById("page-"+p);
+        if(el) el.style.display = (p === name) ? "block" : "none";
+      });
+      pageIndex = Math.max(0, pages.indexOf(name));
+      setActiveNav(name);
 
-// ===== HOTKEYS =====
+      // удобство: при переходе в search — фокус в инпут
+      if(name === "search" || opts.focusSearch){
+        $("#searchInput")?.focus();
+      }
+    }
 
-document.addEventListener("keydown",(e)=>{
+    // ====== FIX: клики по меню ======
+    document.querySelectorAll("#nav button[data-page]").forEach(btn=>{
+      btn.addEventListener("click", () => {
+        const name = btn.dataset.page;
+        if(name === "settings"){
+          openSettings();
+          openPage("settings");
+          return;
+        }
+        openPage(name);
+      });
+    });
 
-  const tag = document.activeElement.tagName.toLowerCase();
-  if(tag==="input") return;
+    // ====== колесо мыши по sidebar: переключение вкладок ======
+    const sidebar = $("#sidebar");
+    let wheelLock = 0;
+    sidebar.addEventListener("wheel", (e) => {
+      // если скроллишь на трекпаде, не делаем бешеную прокрутку вкладок
+      const now = Date.now();
+      if(now - wheelLock < 260) return;
+      wheelLock = now;
 
-  const k = e.key.toLowerCase();
+      const dir = (e.deltaY > 0) ? 1 : -1;
+      pageIndex = (pageIndex + dir + pages.length) % pages.length;
 
-  if(k==="h") openPage("home");
-  if(k==="s") openPage("search");
-  if(k==="p") openPage("playlists");
-  if(k==="b") openPage("library");
+      const name = pages[pageIndex];
+      if(name === "settings"){
+        openSettings();
+      } else {
+        closeSettings();
+      }
+      openPage(name, { focusSearch: name === "search" });
+      e.preventDefault();
+    }, { passive: false });
 
-  if(k===" "){
-    e.preventDefault();
-    togglePlay();
-  }
-});
+    // ====== HOTKEYS ======
+    document.addEventListener("keydown", (e) => {
+      const tag = (document.activeElement?.tagName || "").toLowerCase();
+      const typing = tag === "input" || tag === "textarea" || document.activeElement?.isContentEditable;
 
-// ===== PLAYER =====
+      const k = e.key.toLowerCase();
 
-let playing = false;
-const playBtn = document.getElementById("playBtn");
+      // хоткеи вкладок: работают если НЕ печатаешь
+      // если печатаешь — можно Alt+H/S/P/B/G
+      const allow = !typing || e.altKey;
 
-function togglePlay(){
-  playing = !playing;
-  playBtn.textContent = playing ? "⏸" : "▶";
-}
+      if(allow){
+        if(k === "h") { closeSettings(); openPage("home"); }
+        if(k === "s") { closeSettings(); openPage("search", { focusSearch:true }); }
+        if(k === "p") { closeSettings(); openPage("playlists"); }
+        if(k === "b") { closeSettings(); openPage("library"); }
+        if(k === "g") { openSettings(); openPage("settings"); }
+      }
 
-playBtn.onclick = togglePlay;
+      // space play/pause — только если не печатаешь
+      if(!typing && k === " "){
+        e.preventDefault();
+        togglePlay();
+      }
 
-// DEFAULT
-openPage("home");
+      // esc закрывает настройки
+      if(k === "escape"){
+        closeSettings();
+      }
+    });
 
-</script>
+    // ====== HOME CARDS ======
+    const grid = $("#homeGrid");
+    demoPlaylists.forEach(item=>{
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="cover"></div>
+        <button class="fab" title="Играть">▶</button>
+        <h3>${escapeHtml(item.title)}</h3>
+        <span>${escapeHtml(item.desc)}</span>
+      `;
+      card.addEventListener("click", (e) => {
+        if(e.target.closest(".fab")){
+          setNowPlaying(item.title, "Demo Artist");
+          setPlaying(true);
+          return;
+        }
+        // демо: открыть плейлист
+        setNowPlaying(item.title, "Playlist");
+      });
+      grid.appendChild(card);
+    });
 
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    // ====== PLAYER DEMO ======
+    const playBtn = $("#playBtn");
+    let playing = false;
+
+    function setNowPlaying(track, artist){
+      $("#trackName").textContent = track;
+      $("#artistName").textContent = artist;
+    }
+
+    function setPlaying(state){
+      playing = state;
+      playBtn.textContent = playing ? "⏸" : "▶";
+    }
+
+    function togglePlay(){
+      setPlaying(!playing);
+    }
+
+    playBtn.addEventListener("click", togglePlay);
+    $("#prevBtn").addEventListener("click", () => setNowPlaying("Previous (demo)", "Demo Artist"));
+    $("#nextBtn").addEventListener("click", () => setNowPlaying("Next (demo)", "Demo Artist"));
+
+    // прогресс (визуально)
+    const prog = $("#prog");
+    const progFill = $("#progFill");
+    prog.addEventListener("click", (e) => {
+      const r = prog.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      progFill.style.width = Math.round(pct * 100) + "%";
+    });
+
+    // громкость (визуально)
+    const vol = $("#vol");
+    const volFill = $("#volFill");
+    vol.addEventListener("click", (e) => {
+      const r = vol.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      volFill.style.width = Math.round(pct * 100) + "%";
+    });
+
+    // ====== SETTINGS: modal + persistence ======
+    const modalWrap = $("#modalWrap");
+    const openSettingsBtn = $("#openSettingsBtn");
+    const closeModalBtn = $("#closeModalBtn");
+
+    function openSettings(){
+      modalWrap.style.display = "grid";
+    }
+    function closeSettings(){
+      modalWrap.style.display = "none";
+    }
+
+    openSettingsBtn.addEventListener("click", () => {
+      openSettings();
+      openPage("settings");
+    });
+    closeModalBtn.addEventListener("click", closeSettings);
+    modalWrap.addEventListener("click", (e) => {
+      if(e.target === modalWrap) closeSettings();
+    });
+
+    // UI scale
+    const scaleRange = $("#scaleRange");
+    const savedScale = localStorage.getItem("krs_uiScale");
+    if(savedScale){
+      root.style.setProperty("--s", savedScale);
+      scaleRange.value = savedScale;
+    }
+    scaleRange.addEventListener("input", () => {
+      root.style.setProperty("--s", scaleRange.value);
+      localStorage.setItem("krs_uiScale", scaleRange.value);
+    });
+
+    // Accent
+    const accentColor = $("#accentColor");
+    const savedAccent = localStorage.getItem("krs_accent");
+    if(savedAccent){
+      root.style.setProperty("--sun", savedAccent);
+      accentColor.value = savedAccent;
+    }
+    accentColor.addEventListener("input", () => {
+      root.style.setProperty("--sun", accentColor.value);
+      localStorage.setItem("krs_accent", accentColor.value);
+    });
+
+    // Sunrise opacity + toggle
+    const sunOpacity = $("#sunOpacity");
+    const sunriseToggle = $("#sunriseToggle");
+    const savedSunOp = localStorage.getItem("krs_sunOp");
+    const savedSunOn = localStorage.getItem("krs_sunOn");
+
+    if(savedSunOp){
+      root.style.setProperty("--sunriseOpacity", savedSunOp);
+      sunOpacity.value = savedSunOp;
+    }
+    if(savedSunOn !== null){
+      root.style.setProperty("--sunriseOn", savedSunOn);
+      sunriseToggle.value = savedSunOn;
+    }
+
+    sunOpacity.addEventListener("input", () => {
+      root.style.setProperty("--sunriseOpacity", sunOpacity.value);
+      localStorage.setItem("krs_sunOp", sunOpacity.value);
+    });
+    sunriseToggle.addEventListener("input", () => {
+      root.style.setProperty("--sunriseOn", sunriseToggle.value);
+      localStorage.setItem("krs_sunOn", sunriseToggle.value);
+    });
+
+    // Rain toggle + intensity
+    const rainToggle = $("#rainToggle");
+    const rainIntensity = $("#rainIntensity");
+
+    const savedRainOn = localStorage.getItem("krs_rainOn");
+    const savedRainInt = localStorage.getItem("krs_rainInt");
+
+    if(savedRainOn !== null){
+      root.style.setProperty("--rainOn", savedRainOn);
+      rainToggle.value = savedRainOn;
+    }
+    if(savedRainInt !== null){
+      root.style.setProperty("--rainIntensity", savedRainInt);
+      rainIntensity.value = savedRainInt;
+    }
+
+    function setRain(on){
+      root.style.setProperty("--rainOn", on ? 1 : 0);
+      localStorage.setItem("krs_rainOn", on ? 1 : 0);
+      rebuildRain();
+    }
+
+    function setRainIntensity(v){
+      root.style.setProperty("--rainIntensity", v);
+      localStorage.setItem("krs_rainInt", v);
+      rebuildRain();
+    }
+
+    rainToggle.addEventListener("input", () => setRain(rainToggle.value === "1"));
+    rainIntensity.addEventListener("input", () => setRainIntensity(rainIntensity.value));
+
+    // ====== Rain generator ======
+    const rain = $("#rain");
+    let rainNodes = [];
+
+    function rebuildRain(){
+      // очистить старые
+      rainNodes.forEach(n => n.remove());
+      rainNodes = [];
+
+      const on = Number(getComputedStyle(root).getPropertyValue("--rainOn").trim()) === 1;
+      const count = Number(getComputedStyle(root).getPropertyValue("--rainIntensity").trim()) || 0;
+      if(!on || count <= 0) return;
+
+      const w = window.innerWidth;
+      for(let i=0;i<count;i++){
+        const d = document.createElement("div");
+        d.className = "drop";
+
+        const left = Math.random() * w;
+        const dur = 0.65 + Math.random() * 0.9; // 0.65..1.55
+        const delay = Math.random() * 1.2;
+        const opacity = 0.12 + Math.random() * 0.22;
+
+        d.style.left = left + "px";
+        d.style.animationDuration = dur + "s";
+        d.style.animationDelay = delay + "s";
+        d.style.opacity = opacity;
+
+        rain.appendChild(d);
+        rainNodes.push(d);
+      }
+    }
+
+    window.addEventListener("resize", () => rebuildRain());
+
+    // старт
+    openPage("home");
+    setNowPlaying("Neon Sunrise", "Demo Artist");
+    setPlaying(false);
+    rebuildRain();
+  </script>
 </body>
 </html>
