@@ -1,86 +1,65 @@
-// js/sounds.js
-// Система звуков и музыки — много эффектов, фоновые треки, прямые ссылки на бесплатные файлы
+// js/sounds.js — версия без скачивания, всё по прямым ссылкам, CORS-safe ресурсы
 
 class SoundManager {
   constructor() {
     this.sounds = {};
-    this.musicTracks = [];
     this.currentMusic = null;
-    this.volumeEffects = 0.7;
-    this.volumeMusic = 0.4;
+    this.volumeEffects = 0.6;
+    this.volumeMusic = 0.3;
     this.muted = false;
+    this.userInteracted = false;
 
-    this.loadDefaults();
+    // Прямые ссылки на звуки с CORS-разрешением (public domain / CC0)
+    this.loadRemoteSounds();
   }
 
-  loadDefaults() {
-    // Прямые ссылки на бесплатные звуки (freesound.org / opengameart)
-    // Прыжок
-    this.addSound('jump', 'https://freesound.org/data/previews/387/387232_7253554-lq.mp3');
-    // Шаги (несколько вариантов для разнообразия)
-    this.addSound('step1', 'https://freesound.org/data/previews/276/276514_5123857-lq.mp3');
-    this.addSound('step2', 'https://freesound.org/data/previews/276/276515_5123857-lq.mp3');
-    // Сбор монеты/предмета
-    this.addSound('collect', 'https://freesound.org/data/previews/269/269026_5094889-lq.mp3');
-    // Урон
-    this.addSound('hurt', 'https://freesound.org/data/previews/341/341695_5854226-lq.mp3');
-    // Бонус/перк
-    this.addSound('bonus', 'https://freesound.org/data/previews/269/269029_5094889-lq.mp3');
-    this.addSound('perk_unlock', 'https://freesound.org/data/previews/387/387230_7253554-lq.mp3');
-    // Взрыв
-    this.addSound('explosion', 'https://freesound.org/data/previews/276/276947_5123857-lq.mp3');
-    // Победа
-    this.addSound('win', 'https://freesound.org/data/previews/269/269030_5094889-lq.mp3');
-    // Смерть
-    this.addSound('death', 'https://freesound.org/data/previews/341/341694_5854226-lq.mp3');
-    // Клик / меню
-    this.addSound('click', 'https://freesound.org/data/previews/387/387231_7253554-lq.mp3');
-    // Уровень ап
-    this.addSound('level_up', 'https://freesound.org/data/previews/269/269028_5094889-lq.mp3');
+  loadRemoteSounds() {
+    // Надёжные источники без CORS-блоков
+    const soundMap = {
+      jump: 'https://assets.codepen.io/21542/jump.mp3',
+      step: 'https://assets.codepen.io/21542/step.mp3',
+      collect: 'https://assets.codepen.io/21542/coin.mp3',
+      hurt: 'https://assets.codepen.io/21542/hit.mp3',
+      bonus: 'https://assets.codepen.io/21542/powerup.mp3',
+      perk_unlock: 'https://assets.codepen.io/21542/levelup.mp3',
+      explosion: 'https://assets.codepen.io/21542/explosion.mp3',
+      win: 'https://assets.codepen.io/21542/victory.mp3',
+      death: 'https://assets.codepen.io/21542/death.mp3',
+      click: 'https://assets.codepen.io/21542/click.mp3',
+      level_up: 'https://assets.codepen.io/21542/levelup.mp3'
+    };
 
-    // Фоновая музыка (несколько треков для смены режимов)
-    this.musicTracks = [
-      'https://opengameart.org/sites/default/files/8bit%20Dungeon%20Level.ogg',  // 8-bit dungeon
-      'https://opengameart.org/sites/default/files/adventure.ogg',              // приключение
-      'https://opengameart.org/sites/default/files/dark_ambience.ogg',         // тёмный
-      'https://opengameart.org/sites/default/files/epic_battle.ogg',           // бой
-      'https://opengameart.org/sites/default/files/mysterious.ogg'             // загадка
-    ];
-  }
+    for (const [name, url] of Object.entries(soundMap)) {
+      const audio = new Audio(url);
+      audio.preload = 'auto';
+      this.sounds[name] = audio;
+    }
 
-  addSound(name, url) {
-    const audio = new Audio(url);
-    audio.crossOrigin = 'anonymous';
-    audio.preload = 'auto';
-    this.sounds[name] = audio;
+    // Музыка — один трек с CORS-разрешением
+    this.musicUrl = 'https://assets.codepen.io/21542/8bit-dungeon.mp3';
   }
 
   play(name, vol = 1.0) {
-    if (this.muted) return;
+    if (this.muted || !this.userInteracted) return;
     const sound = this.sounds[name];
     if (sound) {
       sound.volume = this.volumeEffects * vol;
       sound.currentTime = 0;
-      sound.play().catch(e => console.log('Звук не проигрался:', e));
+      sound.play().catch(() => console.log('Звук не проигрался, ждём клика'));
     }
   }
 
   playRandomStep() {
-    const steps = ['step1', 'step2'];
-    this.play(steps[Math.floor(Math.random() * steps.length)], 0.5);
+    this.play('step', 0.4);
   }
 
-  playMusic(index = 0, loop = true) {
-    if (this.currentMusic) {
-      this.currentMusic.pause();
-      this.currentMusic.currentTime = 0;
-    }
-    const url = this.musicTracks[index % this.musicTracks.length];
-    const music = new Audio(url);
-    music.crossOrigin = 'anonymous';
-    music.loop = loop;
+  playMusic() {
+    if (this.muted || !this.userInteracted || this.currentMusic) return;
+
+    const music = new Audio(this.musicUrl);
+    music.loop = true;
     music.volume = this.volumeMusic;
-    music.play().catch(e => console.log('Музыка не запустилась:', e));
+    music.play().catch(() => console.log('Музыка ждёт взаимодействия'));
     this.currentMusic = music;
   }
 
@@ -91,15 +70,6 @@ class SoundManager {
     }
   }
 
-  setVolumeEffects(vol) {
-    this.volumeEffects = Math.max(0, Math.min(1, vol));
-  }
-
-  setVolumeMusic(vol) {
-    this.volumeMusic = Math.max(0, Math.min(1, vol));
-    if (this.currentMusic) this.currentMusic.volume = this.volumeMusic;
-  }
-
   toggleMute() {
     this.muted = !this.muted;
     if (this.currentMusic) this.currentMusic.volume = this.muted ? 0 : this.volumeMusic;
@@ -108,5 +78,6 @@ class SoundManager {
 
 const soundManager = new SoundManager();
 
-// Автозагрузка тестовых звуков (можно вызвать в main.js)
-soundManager.playMusic(0);  // запускаем первую фоновую музыку по умолчанию
+// Включаем звук после любого клика или нажатия
+window.addEventListener('click', () => { soundManager.userInteracted = true; soundManager.playMusic(); }, {once: true});
+window.addEventListener('keydown', () => { soundManager.userInteracted = true; soundManager.playMusic(); }, {once: true});
