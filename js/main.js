@@ -1,4 +1,4 @@
-// js/main.js — ПОФИКСЕННАЯ версия с кнопками в меню и запуском музыки после клика
+// js/main.js — фикс кнопок + управление цифрами + музыка после клика
 
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
@@ -8,6 +8,7 @@ let state = 'menu';
 let username = '';
 let password = '';
 let message = '';
+let activeField = 'username';
 let loggedInUser = null;
 let playerData = {};
 let player = null;
@@ -15,38 +16,9 @@ let currentMode = null;
 let dt = 0;
 let lastTime = performance.now();
 
-// Клавиши + кнопки
 const keys = {};
-window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
-// Создаём 2 кнопки в DOM (над canvas)
-const ui = document.getElementById('ui');
-ui.innerHTML = `
-  <button id="btnRegister" style="position:absolute; top:200px; left:50%; transform:translateX(-50%); padding:15px 30px; font-size:24px; background:#444; color:#0ff; border:2px solid #0ff; cursor:pointer;">Регистрация</button>
-  <button id="btnLogin" style="position:absolute; top:280px; left:50%; transform:translateX(-50%); padding:15px 30px; font-size:24px; background:#444; color:#0ff; border:2px solid #0ff; cursor:pointer;">Вход</button>
-`;
-
-const btnRegister = document.getElementById('btnRegister');
-const btnLogin = document.getElementById('btnLogin');
-
-// Клик по кнопкам — переход в состояния
-btnRegister.addEventListener('click', () => {
-  state = 'register';
-  message = '';
-  soundManager.userInteracted = true;
-  soundManager.playMusic();
-});
-
-btnLogin.addEventListener('click', () => {
-  state = 'login';
-  message = '';
-  soundManager.userInteracted = true;
-  soundManager.playMusic();
-});
-
-// Ввод в состояниях register/login (клавиатура)
 window.addEventListener('keydown', e => {
+  keys[e.key.toLowerCase()] = true;
   if (state === 'register' || state === 'login') {
     if (e.key === 'Backspace') {
       if (activeField === 'username') username = username.slice(0, -1);
@@ -62,7 +34,34 @@ window.addEventListener('keydown', e => {
     }
   }
 });
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
+// Создаём кнопки
+const ui = document.getElementById('ui');
+ui.innerHTML = `
+  <button id="btnRegister" style="position:absolute; top:200px; left:50%; transform:translateX(-50%); padding:20px 40px; font-size:28px; background:#333; color:#0ff; border:3px solid #0ff; cursor:pointer; border-radius:10px;">Регистрация</button>
+  <button id="btnLogin" style="position:absolute; top:280px; left:50%; transform:translateX(-50%); padding:20px 40px; font-size:28px; background:#333; color:#0ff; border:3px solid #0ff; cursor:pointer; border-radius:10px;">Вход</button>
+`;
+
+const btnRegister = document.getElementById('btnRegister');
+const btnLogin = document.getElementById('btnLogin');
+
+// Клик по кнопкам — переход + запуск музыки
+btnRegister.addEventListener('click', () => {
+  state = 'register';
+  message = '';
+  soundManager.userInteracted = true;
+  soundManager.playMusic();
+});
+
+btnLogin.addEventListener('click', () => {
+  state = 'login';
+  message = '';
+  soundManager.userInteracted = true;
+  soundManager.playMusic();
+});
+
+// Обработка Enter в вводе
 function handleEnter() {
   if (state === 'register') {
     const [ok, msg] = register(username, password);
@@ -96,13 +95,16 @@ function gameLoop(time) {
     ctx.fillStyle = '#0a0015';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawText('ТВОЯ ИГРА', 480, 120, '#00ffff', 60, 'center');
-    drawText('Кликни на кнопку ниже', 480, 180, '#aaaaaa', 24, 'center');
+    drawText('Нажми на кнопку или клавишу 1/2', 480, 180, '#aaaaaa', 24, 'center');
+    // Цифры тоже работают
+    if (keys['1']) btnRegister.click();
+    if (keys['2']) btnLogin.click();
   } else if (state === 'register' || state === 'login') {
     drawText(state === 'register' ? 'РЕГИСТРАЦИЯ' : 'ВХОД', 480, 100, '#00ffff', 40, 'center');
     drawText('Логин: ' + username + (activeField === 'username' ? '|' : ''), 300, 200, '#ffffff', 28);
     drawText('Пароль: ' + '*'.repeat(password.length) + (activeField === 'password' ? '|' : ''), 300, 260, '#ffffff', 28);
     drawText(message, 480, 350, message.includes('ошиб') ? '#ff4444' : '#44ff44', 22, 'center');
-    drawText('Нажми ENTER для подтверждения', 480, 400, '#aaaaaa', 18, 'center');
+    drawText('Вводи с клавиатуры, Enter — подтвердить', 480, 400, '#aaaaaa', 18, 'center');
   } else if (state === 'mode_select') {
     drawText('ВЫБЕРИ РЕЖИМ', 480, 150, '#00ffff', 40, 'center');
     drawText('1 — Сюжет     2 — Выживание     3 — Аркада', 480, 250, '#ffffff', 28, 'center');
