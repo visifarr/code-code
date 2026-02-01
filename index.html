@@ -5,13 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Краски Рассвета — Music Hub</title>
 
+  <!-- ZIP importer -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
   <style>
     :root{
-      --s: 1.10;          /* общий масштаб UI */
-      --density: 1.00;    /* плотность (компактность) */
+      --s: 1.08;
+      --density: 1.00;
 
       --bg:#070914;
-      --panel: rgba(14,16,28,.86);
+      --panel: rgba(14,16,28,.80);
       --stroke: rgba(255,255,255,.07);
       --text:#f1f3ff;
       --muted:#a7abc8;
@@ -20,21 +23,21 @@
       --pink:#ff6fae;
       --sky:#6ecbff;
 
-      --r: calc(16px * var(--s));
+      --r: calc(18px * var(--s));
       --pad: calc(12px * var(--s));
       --gap: calc(12px * var(--s));
       --blur: 12px;
 
       --playerH: calc(104px * var(--s));
 
-      --sunriseOn: 1;        /* 0/1 */
-      --sunrisePower: .78;   /* 0..1 */
+      --sunriseOn: 1;
+      --sunrisePower: .78;
 
-      --rainOn: 0;           /* 0/1 */
-      --rainCount: 28;       /* 0..160 */
-      --rainFront: 1;        /* 0/1 (на переднем плане) */
+      --rainOn: 0;
+      --rainCount: 28;
+      --rainFront: 1;
 
-      --bgPreset: 1;         /* 1..8 */
+      --bgPreset: 1;
     }
 
     *{ box-sizing:border-box; }
@@ -47,19 +50,9 @@
       overflow:hidden;
     }
 
-    /* ===== BACKGROUND ===== */
-    .bg{
-      position:fixed; inset:0; z-index:0;
-      background: var(--bg);
-    }
-    .bg::before{
-      content:"";
-      position:absolute; inset:0;
-      background: var(--bg);
-      filter:saturate(1.10) contrast(1.04);
-    }
+    .bg{ position:fixed; inset:0; z-index:0; background: var(--bg); }
+    .bg::before{ content:""; position:absolute; inset:0; background: var(--bg); filter:saturate(1.10) contrast(1.04); }
 
-    /* 8 “сладких” пресетов */
     body[data-bg="1"] .bg::before{
       background:
         radial-gradient(1100px 700px at 18% -10%, color-mix(in srgb, var(--accent) 42%, transparent), transparent 60%),
@@ -125,11 +118,9 @@
         var(--bg);
     }
 
-    /* ===== SUNRISE OVERLAY ===== */
     .sunrise{
       position:fixed; inset:-18%;
-      z-index:1;
-      pointer-events:none;
+      z-index:1; pointer-events:none;
       opacity: calc(var(--sunriseOn) * var(--sunrisePower));
       background:
         radial-gradient(900px 420px at 26% 10%, color-mix(in srgb, var(--accent) 44%, transparent), transparent 62%),
@@ -145,22 +136,17 @@
       100% { transform: translate3d(-1.4%, -1.0%, 0) scale(1.02); }
     }
 
-    /* ===== RAIN (DROPLETS ON SCREEN) ===== */
     .rain{
       position:fixed; inset:0;
-      z-index: 2;
-      pointer-events:none;
+      z-index: 2; pointer-events:none;
       opacity: calc(.95 * var(--rainOn));
       overflow:hidden;
     }
-    /* на переднем плане */
-    body[data-rainfront="1"] .rain { z-index: 50; }
+    body[data-rainfront="1"] .rain { z-index: 60; }
 
     .droplet{
-      position:absolute;
-      top:-12vh;
-      width: 12px;
-      height: 12px;
+      position:absolute; top:-12vh;
+      width: 12px; height: 12px;
       border-radius: 999px;
       background:
         radial-gradient(circle at 28% 28%, rgba(255,255,255,.62), rgba(255,255,255,.10) 42%, rgba(255,255,255,.02) 65%, transparent 72%),
@@ -174,11 +160,8 @@
     }
     .droplet::after{
       content:"";
-      position:absolute;
-      left:50%;
-      top:-18px;
-      width:2px;
-      height:20px;
+      position:absolute; left:50%; top:-18px;
+      width:2px; height:20px;
       transform: translateX(-50%);
       background: linear-gradient(to bottom, transparent, rgba(200,240,255,.22), transparent);
       border-radius:999px;
@@ -188,13 +171,11 @@
       to { transform: translateY(140vh) translateZ(0); }
     }
 
-    /* ===== APP ===== */
     .app{
-      position:relative;
-      z-index:3;
+      position:relative; z-index:3;
       height:100%;
       display:grid;
-      grid-template-columns: calc(270px * var(--s) * var(--density)) 1fr;
+      grid-template-columns: calc(280px * var(--s) * var(--density)) 1fr;
       grid-template-rows: 1fr var(--playerH);
       gap: var(--gap);
       padding: var(--pad);
@@ -210,7 +191,6 @@
       overflow:hidden;
     }
 
-    /* ===== SIDEBAR ===== */
     .sidebar{
       padding: calc(14px * var(--s) * var(--density));
       display:flex;
@@ -226,6 +206,7 @@
       -webkit-text-fill-color:transparent;
       user-select:none;
     }
+
     .nav{
       display:flex;
       flex-direction:column;
@@ -276,7 +257,6 @@
       line-height: 1.35;
     }
 
-    /* ===== MAIN ===== */
     .main{ display:flex; flex-direction:column; }
     .topbar{
       padding: calc(12px * var(--s) * var(--density));
@@ -304,6 +284,7 @@
       font-size: calc(13px * var(--s));
       font-weight: 750;
     }
+
     .chip{
       border: 1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.05);
@@ -333,6 +314,37 @@
     .hero h1{ margin:0; font-size: calc(22px * var(--s)); letter-spacing:.2px; }
     .hero p{ margin: 6px 0 0; color: rgba(255,255,255,.72); font-weight: 650; font-size: calc(12px * var(--s)); }
 
+    .grid3{
+      margin-top: calc(12px * var(--s));
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: calc(12px * var(--s));
+    }
+    .card{
+      border-radius: calc(18px * var(--s));
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      padding: calc(14px * var(--s));
+      cursor:pointer;
+      user-select:none;
+      overflow:hidden;
+      position:relative;
+      min-height: calc(104px * var(--s));
+    }
+    .card::before{
+      content:"";
+      position:absolute; inset:-20%;
+      background:
+        radial-gradient(420px 240px at 20% 10%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 60%),
+        radial-gradient(420px 240px at 80% 20%, color-mix(in srgb, var(--pink) 16%, transparent), transparent 62%);
+      opacity:.8;
+      filter: blur(0.4px);
+    }
+    .card > *{ position:relative; z-index:1; }
+    .card:hover{ background: rgba(255,255,255,.05); }
+    .card .t{ font-weight: 950; font-size: calc(14px * var(--s)); }
+    .card .d{ margin-top: 6px; color: rgba(255,255,255,.72); font-weight: 650; font-size: calc(12px * var(--s)); }
+
     .box{
       margin-top: calc(14px * var(--s));
       padding: calc(12px * var(--s));
@@ -342,49 +354,6 @@
     }
     .box h3{ margin:0 0 10px 0; font-size: calc(14px * var(--s)); font-weight: 950; }
     .note{ margin-top: 8px; color: rgba(255,255,255,.65); font-size: calc(11px * var(--s)); line-height: 1.35; }
-
-    .grid2{
-      display:grid;
-      grid-template-columns: 1fr 1.2fr;
-      gap: calc(12px * var(--s) * var(--density));
-    }
-
-    .list{
-      display:flex;
-      flex-direction:column;
-      gap: calc(10px * var(--s) * var(--density));
-      min-width:0;
-    }
-
-    .item{
-      padding: calc(10px * var(--s) * var(--density));
-      border-radius: calc(14px * var(--s));
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.14);
-      cursor:pointer;
-      user-select:none;
-    }
-    .item:hover{ background: rgba(255,255,255,.06); }
-    .item.active{
-      border-color: color-mix(in srgb, var(--accent) 36%, transparent);
-      background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent), rgba(255,255,255,.05));
-    }
-    .item .t{ font-weight: 950; font-size: calc(13px * var(--s)); margin-bottom: 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .item .d{ color: rgba(255,255,255,.70); font-weight: 650; font-size: calc(11px * var(--s)); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-    .stage{
-      border-radius: calc(14px * var(--s));
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.18);
-      overflow:hidden;
-      min-height: calc(240px * var(--s));
-    }
-    .stage iframe{
-      width:100%;
-      height: calc(260px * var(--s));
-      border:0;
-      display:block;
-    }
 
     .row{
       display:flex;
@@ -409,6 +378,10 @@
       border-color: color-mix(in srgb, var(--accent) 40%, transparent);
       color:#151515;
     }
+    .btn2.ghost{
+      background: rgba(255,255,255,.04);
+    }
+
     .toggle{
       display:inline-flex;
       align-items:center;
@@ -456,16 +429,70 @@
       gap: 12px;
     }
 
-    /* ===== PLAYER ===== */
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: calc(12px * var(--s) * var(--density));
+    }
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap: calc(10px * var(--s) * var(--density));
+      min-width:0;
+    }
+
+    .item{
+      padding: calc(10px * var(--s) * var(--density));
+      border-radius: calc(14px * var(--s));
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.14);
+      cursor:pointer;
+      user-select:none;
+    }
+    .item:hover{ background: rgba(255,255,255,.06); }
+    .item.active{
+      border-color: color-mix(in srgb, var(--accent) 36%, transparent);
+      background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent), rgba(255,255,255,.05));
+    }
+    .item .t{ font-weight: 950; font-size: calc(13px * var(--s)); margin-bottom: 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .item .d{ color: rgba(255,255,255,.70); font-weight: 650; font-size: calc(11px * var(--s)); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .miniRow{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+
+    .stage{
+      border-radius: calc(14px * var(--s));
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.18);
+      overflow:hidden;
+      min-height: calc(240px * var(--s));
+    }
+    .stage iframe{
+      width:100%;
+      height: calc(260px * var(--s));
+      border:0;
+      display:block;
+    }
+
+    /* ===== PLAYER: glass ===== */
     .player{
       grid-column: 1 / span 2;
       grid-row:2;
+
       padding: calc(12px * var(--s) * var(--density)) calc(14px * var(--s) * var(--density));
       display:grid;
-      grid-template-columns: 1.35fr 1fr 1fr;
+      grid-template-columns: 1.35fr 1fr 1.2fr;
       align-items:center;
       gap: calc(12px * var(--s) * var(--density));
+
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03)),
+        radial-gradient(900px 240px at 20% 0%, rgba(255,179,71,.10), transparent 60%),
+        radial-gradient(900px 240px at 80% 0%, rgba(255,111,174,.08), transparent 62%),
+        rgba(14,16,28,.62);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 22px 60px rgba(0,0,0,.62);
     }
+
     .now{
       display:flex;
       align-items:center;
@@ -476,13 +503,21 @@
       width: calc(54px * var(--s));
       height: calc(54px * var(--s));
       border-radius: calc(14px * var(--s));
-      background: linear-gradient(135deg, rgba(255,255,255,.08), color-mix(in srgb, var(--accent) 22%, transparent));
-      border: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(135deg, rgba(255,255,255,.10), color-mix(in srgb, var(--accent) 22%, transparent));
+      border: 1px solid rgba(255,255,255,.12);
       flex:0 0 auto;
+      position:relative;
+      overflow:hidden;
+    }
+    .art::after{
+      content:"";
+      position:absolute; inset:-30%;
+      background: radial-gradient(280px 180px at 30% 20%, rgba(255,255,255,.10), transparent 55%);
+      transform: rotate(8deg);
     }
     .meta{ min-width:0; }
     .track{ font-weight: 950; font-size: calc(13px * var(--s)); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .artist{ margin-top: 4px; font-weight: 700; font-size: calc(11px * var(--s)); color: rgba(255,255,255,.68); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .artist{ margin-top: 4px; font-weight: 750; font-size: calc(11px * var(--s)); color: rgba(255,255,255,.72); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
     .ctrls{
       display:flex;
@@ -494,20 +529,24 @@
       width: calc(40px * var(--s));
       height: calc(40px * var(--s));
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.06);
-      color: rgba(255,255,255,.92);
+      color: rgba(255,255,255,.94);
       cursor:pointer;
       display:grid;
       place-items:center;
-      font-weight: 900;
+      font-weight: 950;
       user-select:none;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18) inset;
     }
+    .btn:hover{ background: rgba(255,255,255,.09); }
     .btn.play{
-      width: calc(44px * var(--s));
-      height: calc(44px * var(--s));
-      background: var(--accent);
-      border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+      width: calc(46px * var(--s));
+      height: calc(46px * var(--s));
+      background:
+        radial-gradient(50% 60% at 35% 30%, rgba(255,255,255,.22), transparent 55%),
+        var(--accent);
+      border-color: color-mix(in srgb, var(--accent) 55%, rgba(255,255,255,.10));
       color:#151515;
     }
     .right{
@@ -515,12 +554,52 @@
       align-items:center;
       justify-content:flex-end;
       gap: 10px;
-      color: rgba(255,255,255,.70);
-      font-weight: 800;
+      color: rgba(255,255,255,.72);
+      font-weight: 850;
       font-size: 12px;
     }
+    audio{ width: 100%; max-width: 360px; }
 
-    audio{ width: 100%; max-width: 320px; }
+    /* ===== Tooltip modal ===== */
+    .modalWrap{
+      position:fixed; inset:0;
+      display:none;
+      z-index: 80;
+      background: rgba(0,0,0,.50);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+    }
+    .modal{
+      width: min(520px, 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(14,16,28,.86);
+      box-shadow: 0 28px 80px rgba(0,0,0,.70);
+      overflow:hidden;
+    }
+    .modalTop{
+      padding: 14px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .modalTop .ttl{
+      font-weight: 950;
+      font-size: 14px;
+      letter-spacing:.2px;
+    }
+    .modalBody{
+      padding: 14px;
+      color: rgba(255,255,255,.78);
+      font-weight: 650;
+      line-height: 1.35;
+      font-size: 12px;
+    }
 
     .content::-webkit-scrollbar{ width: 10px; }
     .content::-webkit-scrollbar-thumb{
@@ -537,6 +616,7 @@
       .right{ justify-content:center; }
       .grid2{ grid-template-columns: 1fr; }
       .split{ grid-template-columns: 1fr; }
+      .grid3{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -546,19 +626,30 @@
   <div class="sunrise"></div>
   <div class="rain" id="rain"></div>
 
+  <div class="modalWrap" id="modalWrap" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modalTop">
+        <div class="ttl" id="modalTitle">Подсказка</div>
+        <button class="btn2 ghost" id="modalClose">Закрыть</button>
+      </div>
+      <div class="modalBody" id="modalBody"></div>
+    </div>
+  </div>
+
   <div class="app">
     <aside class="panel sidebar">
       <div class="logo">Краски Рассвета</div>
       <div class="nav" id="nav">
         <button class="active" data-page="home">🏠 Главная <span class="k">1</span></button>
         <button data-page="music">🎧 Музыка <span class="k">2</span></button>
-        <button data-page="playlists">📁 Папки/Плейлисты <span class="k">3</span></button>
-        <button data-page="library">⭐ Библиотека <span class="k">4</span></button>
+        <button data-page="playlists">📁 Плейлисты <span class="k">3</span></button>
+        <button data-page="embed">🌐 Embed <span class="k">4</span></button>
         <button data-page="settings">⚙ Настройки <span class="k">5</span></button>
       </div>
+
       <div class="hint">
-        1–5 вкладки (если печатаешь: Alt+1..5)<br/>
-        Один источник: Local (твои файлы) или Embed
+        Alt+1..5 вкладки<br>
+        Клик по непонятному = подсказка
       </div>
     </aside>
 
@@ -566,7 +657,7 @@
       <div class="topbar">
         <div class="search">
           <span>🔍</span>
-          <input id="searchInput" placeholder="Поиск (демо)" autocomplete="off" />
+          <input id="searchInput" placeholder="Поиск по трекам (local + repo)" autocomplete="off" />
         </div>
         <div class="chip" id="goSettings">Настройки</div>
       </div>
@@ -575,20 +666,38 @@
         <!-- HOME -->
         <section id="page-home">
           <div class="hero">
-            <h1>Домашняя</h1>
-            <p>Здесь мы держим “релизную” основу: свой плеер + встройки + структура плейлистов.</p>
+            <h1>Главная</h1>
+            <p>Подборки и быстрые действия</p>
+          </div>
+
+          <div class="grid3">
+            <div class="card" id="homeAdd">
+              <div class="t">Добавить треки</div>
+              <div class="d">файлы, папка, zip</div>
+            </div>
+            <div class="card" id="homeAuto">
+              <div class="t">Авто-плейлисты</div>
+              <div class="d">по автору (из имени файла)</div>
+            </div>
+            <div class="card" id="homeEmbed">
+              <div class="t">Открыть Embed</div>
+              <div class="d">Spotify, YouTube и другое</div>
+            </div>
           </div>
 
           <div class="box">
-            <h3>Быстрый старт</h3>
+            <h3>Сейчас в базе</h3>
             <div class="row">
-              <button class="btn2 primary" id="btnAddFiles">Добавить свои треки</button>
-              <button class="btn2" id="btnOpenMusic">Открыть вкладку Музыка</button>
-              <button class="btn2" id="btnOpenPlaylists">Открыть Папки/Плейлисты</button>
+              <button class="btn2" id="homeHelp">Что тут происходит</button>
+              <button class="btn2 primary" id="homeGoMusic">Открыть Музыка</button>
+              <button class="btn2" id="homeGoPlaylists">Открыть Плейлисты</button>
             </div>
-            <div class="note">
-              “Свои треки” сейчас сохраняются локально в этом браузере (IndexedDB). Для общего доступа всем нужен Firebase.
-            </div>
+            <div class="note" id="homeStats">—</div>
+          </div>
+
+          <div class="box">
+            <h3>Недавние треки</h3>
+            <div class="list" id="homeRecent"></div>
           </div>
         </section>
 
@@ -596,86 +705,83 @@
         <section id="page-music" style="display:none">
           <div class="hero">
             <h1>Музыка</h1>
-            <p>Слева — список. Снизу — плеер и текущий трек. Источник один: Local или Embed.</p>
+            <p>Local + Repo. Поиск сверху. Долгое нажатие не нужно, всё по клику.</p>
           </div>
 
           <div class="box">
-            <h3>Мои треки (Local)</h3>
+            <h3>Импорт</h3>
             <div class="row">
-              <input id="fileInput" type="file" accept="audio/*" multiple style="display:none"/>
-              <button class="btn2 primary" id="uploadBtn">Загрузить файлы</button>
-              <button class="btn2" id="clearLocalBtn">Удалить все мои треки</button>
+              <input id="fileInput" type="file" accept="audio/*" multiple style="display:none">
+              <input id="folderInput" type="file" accept="audio/*" multiple webkitdirectory directory style="display:none">
+              <input id="zipInput" type="file" accept=".zip" style="display:none">
+
+              <button class="btn2 primary" id="btnFiles">Файлы</button>
+              <button class="btn2" id="btnFolder">Папка</button>
+              <button class="btn2" id="btnZip">ZIP</button>
+              <button class="btn2" id="btnClearLocal">Очистить Local</button>
+              <button class="btn2" id="btnHowImport">Как работает импорт</button>
             </div>
-            <div class="note" id="localInfo">Пока нет треков.</div>
+            <div class="note" id="importInfo">—</div>
           </div>
 
           <div class="box">
-            <h3>Встройки (Embed)</h3>
-            <div class="grid2">
-              <div class="list" id="embedList"></div>
-              <div class="stage" id="embedStage"></div>
-            </div>
-            <div class="note">
-              Embed даёт “много музыки” через ссылки (Spotify/YouTube/SoundCloud). Это легальный и рабочий старт. Прямой “поток” из сервисов обычно недоступен.
-            </div>
-          </div>
-
-          <div class="box">
-            <h3>Мои треки — список</h3>
-            <div class="list" id="localList"></div>
+            <h3>Треки</h3>
+            <div class="list" id="tracksList"></div>
           </div>
         </section>
 
         <!-- PLAYLISTS -->
         <section id="page-playlists" style="display:none">
           <div class="hero">
-            <h1>Папки и плейлисты</h1>
-            <p>Это локальная структура (сохранение). Позже перенесём в Firebase.</p>
+            <h1>Плейлисты</h1>
+            <p>Создай плейлист, переименуй, добавляй треки кнопкой.</p>
           </div>
 
           <div class="box">
-            <h3>Создание</h3>
-            <div class="split">
-              <div>
-                <div class="row">
-                  <input id="folderName" placeholder="Название папки" style="flex:1;border:none;outline:none;background:rgba(255,255,255,.06);color:var(--text);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);font-weight:800;">
-                  <button class="btn2 primary" id="createFolderBtn">Создать папку</button>
-                </div>
-                <div class="note">Папка = контейнер плейлистов.</div>
+            <h3>Быстрые действия</h3>
+            <div class="row">
+              <button class="btn2 primary" id="plNew">Новый плейлист</button>
+              <button class="btn2" id="plRename">Переименовать</button>
+              <button class="btn2" id="plDelete">Удалить</button>
+              <button class="btn2" id="plHelp">Подсказка</button>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div class="box">
+              <h3>Список плейлистов</h3>
+              <div class="list" id="plList"></div>
+            </div>
+
+            <div class="box">
+              <h3 id="plTitle">Плейлист</h3>
+              <div class="row">
+                <button class="btn2" id="plPlayAll">Играть всё</button>
+                <button class="btn2" id="plClear">Очистить</button>
+                <button class="btn2" id="plAbout">Что это</button>
               </div>
-              <div>
-                <div class="row">
-                  <input id="playlistName" placeholder="Название плейлиста" style="flex:1;border:none;outline:none;background:rgba(255,255,255,.06);color:var(--text);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);font-weight:800;">
-                  <button class="btn2" id="createPlaylistBtn">Создать плейлист в выбранной папке</button>
-                </div>
-                <div class="note">Выбери папку ниже, потом создавай плейлист.</div>
-              </div>
+              <div class="note" id="plMeta">—</div>
+              <div class="list" id="plTracks"></div>
             </div>
-          </div>
-
-          <div class="box">
-            <h3>Структура</h3>
-            <div class="grid2">
-              <div class="list" id="foldersList"></div>
-              <div class="list" id="playlistsList"></div>
-            </div>
-
-            <div class="note">
-              Добавление трека в плейлист: открой Музыка → в списке Local трека нажми “＋ в плейлист”.
-            </div>
-          </div>
-
-          <div class="box">
-            <h3>Содержимое выбранного плейлиста</h3>
-            <div class="list" id="playlistTracks"></div>
           </div>
         </section>
 
-        <!-- LIBRARY -->
-        <section id="page-library" style="display:none">
+        <!-- EMBED -->
+        <section id="page-embed" style="display:none">
           <div class="hero">
-            <h1>Библиотека</h1>
-            <p>Пока демо. Потом: лайки, история, недавно слушал.</p>
+            <h1>Embed</h1>
+            <p>Тут живут встройки. Они отдельно от Local/Repo.</p>
+          </div>
+
+          <div class="box">
+            <h3>Встройки</h3>
+            <div class="grid2">
+              <div class="list" id="embedList"></div>
+              <div class="stage" id="embedStage"></div>
+            </div>
+            <div class="note">
+              Встройки не дают полный контроль play/pause, поэтому кнопка Play тут делает перезапуск.
+            </div>
           </div>
         </section>
 
@@ -683,29 +789,29 @@
         <section id="page-settings" style="display:none">
           <div class="hero">
             <h1>Настройки</h1>
-            <p>Кнопки-тумблеры, побольше пресетов, дождь поверх экрана.</p>
+            <p>Кнопки, пресеты, дождь поверх</p>
           </div>
 
           <div class="box">
             <h3>Интерфейс</h3>
-            <div class="row" style="margin-top:8px;">
+            <div class="row">
               <span style="font-weight:900;">Масштаб UI</span>
-              <input id="uiScale" type="range" min="0.80" max="1.95" step="0.01" value="1.10" style="width:56%;">
+              <input id="uiScale" type="range" min="0.80" max="1.95" step="0.01" value="1.08" style="width:56%;">
             </div>
             <div class="row">
               <span style="font-weight:900;">Плотность</span>
               <input id="density" type="range" min="0.85" max="1.15" step="0.01" value="1.00" style="width:56%;">
             </div>
             <div class="row">
-              <span style="font-weight:900;">Основной цвет</span>
+              <span style="font-weight:900;">Цвет</span>
               <input id="accent" type="color" value="#ffb347" style="width:46px;height:34px;border:none;background:transparent;">
             </div>
           </div>
 
           <div class="box">
             <h3>Фон и эффекты</h3>
-            <div class="row" style="margin-top:8px;">
-              <span style="font-weight:900;">Пресет фона</span>
+            <div class="row">
+              <span style="font-weight:900;">Пресет</span>
               <input id="bgPreset" type="range" min="1" max="8" step="1" value="1" style="width:56%;">
             </div>
 
@@ -721,12 +827,8 @@
             </div>
 
             <div class="row">
-              <span style="font-weight:900;">Кол-во капель</span>
-              <input id="rainCount" type="range" min="0" max="160" step="1" value="28" style="width:56%;">
-            </div>
-
-            <div class="note">
-              “Дождь поверх” — это именно на экран: z-index выше всего.
+              <span style="font-weight:900;">Капли</span>
+              <input id="rainCount" type="range" min="0" max="180" step="1" value="28" style="width:56%;">
             </div>
           </div>
         </section>
@@ -739,20 +841,21 @@
         <div class="art"></div>
         <div class="meta">
           <div class="track" id="trackName">Нет активного трека</div>
-          <div class="artist" id="artistName">Выбери трек в Музыка</div>
+          <div class="artist" id="artistName">Выбери трек</div>
         </div>
       </div>
 
       <div class="ctrls">
         <button class="btn" id="prevBtn" title="Предыдущий">⏮</button>
-        <button class="btn play" id="playBtn" title="Play/Pause">▶</button>
+        <button class="btn play" id="playBtn" title="Play">▶</button>
         <button class="btn" id="nextBtn" title="Следующий">⏭</button>
         <button class="btn" id="stopBtn" title="Стоп">⏹</button>
       </div>
 
       <div class="right">
+        <button class="btn2" id="addToPlBtn">В плейлист</button>
         <span id="sourceBadge">Source: —</span>
-        <div style="width:min(320px,100%);">
+        <div style="width:min(360px,100%);">
           <audio id="audio" controls style="display:none;"></audio>
         </div>
       </div>
@@ -763,7 +866,15 @@
     const $ = (s) => document.querySelector(s);
     const root = document.documentElement;
 
-    // ---------- Utils ----------
+    const SOURCE = { NONE:"—", LOCAL:"Local", REPO:"Repo", EMBED:"Embed" };
+    let activeSource = SOURCE.NONE;
+
+    const audio = $("#audio");
+    const embedStage = $("#embedStage");
+    const modalWrap = $("#modalWrap");
+    const modalTitle = $("#modalTitle");
+    const modalBody = $("#modalBody");
+
     function esc(s){
       return String(s)
         .replaceAll("&","&amp;")
@@ -772,14 +883,49 @@
         .replaceAll('"',"&quot;")
         .replaceAll("'","&#039;");
     }
+
+    function showTip(title, body){
+      modalTitle.textContent = title || "Подсказка";
+      modalBody.textContent = body || "";
+      modalWrap.style.display = "flex";
+    }
+    function hideTip(){ modalWrap.style.display = "none"; }
+    $("#modalClose").addEventListener("click", hideTip);
+    modalWrap.addEventListener("click", (e)=> { if(e.target === modalWrap) hideTip(); });
+    document.addEventListener("keydown", (e)=> { if(e.key === "Escape") hideTip(); });
+
     function loadLS(key, fallback){
       const v = localStorage.getItem(key);
       return (v === null || v === undefined) ? fallback : v;
     }
     function saveLS(key, v){ localStorage.setItem(key, String(v)); }
 
+    function setBadge(source){
+      activeSource = source;
+      $("#sourceBadge").textContent = "Source: " + source;
+    }
+
+    function stopEmbed(){
+      embedStage.innerHTML = "";
+    }
+    function stopLocalAudio(){
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+      audio.style.display = "none";
+    }
+    function stopAll(){
+      stopEmbed();
+      stopLocalAudio();
+      activeTrackId = null;
+      setBadge(SOURCE.NONE);
+      $("#trackName").textContent = "Остановлено";
+      $("#artistName").textContent = "Выбери трек";
+      renderAll();
+    }
+
     // ---------- Pages ----------
-    const pages = ["home","music","playlists","library","settings"];
+    const pages = ["home","music","playlists","embed","settings"];
     function setActiveNav(name){
       document.querySelectorAll("#nav button").forEach(btn=>{
         btn.classList.toggle("active", btn.dataset.page === name);
@@ -791,12 +937,14 @@
         if(el) el.style.display = (p === name) ? "block" : "none";
       });
       setActiveNav(name);
-      if(name === "music") renderAll();
+      if(name === "music") $("#searchInput")?.focus();
+      renderAll();
     }
     document.querySelectorAll("#nav button").forEach(btn=>{
       btn.addEventListener("click", () => openPage(btn.dataset.page));
     });
     $("#goSettings").addEventListener("click", () => openPage("settings"));
+
     document.addEventListener("keydown", (e) => {
       const tag = (document.activeElement?.tagName || "").toLowerCase();
       const typing = tag === "input" || tag === "textarea" || document.activeElement?.isContentEditable;
@@ -804,94 +952,57 @@
       if(e.key === "1") openPage("home");
       if(e.key === "2") openPage("music");
       if(e.key === "3") openPage("playlists");
-      if(e.key === "4") openPage("library");
+      if(e.key === "4") openPage("embed");
       if(e.key === "5") openPage("settings");
     });
 
-    $("#btnOpenMusic").addEventListener("click", () => openPage("music"));
-    $("#btnOpenPlaylists").addEventListener("click", () => openPage("playlists"));
-
-    // ---------- Sources: one active ----------
-    const SOURCE = { NONE:"—", LOCAL:"Local", EMBED:"Embed" };
-    let activeSource = SOURCE.NONE;
-
-    const embedStage = $("#embedStage");
-    const audio = $("#audio");
-
-    function setBadge(source){
-      activeSource = source;
-      $("#sourceBadge").textContent = "Source: " + source;
-    }
-
-    function stopEmbed(){
-      embedStage.innerHTML = "";
-      // визуально: список перерендерим отдельно
-    }
-
-    function stopLocalAudio(){
-      audio.pause();
-      audio.removeAttribute("src");
-      audio.load();
-      audio.style.display = "none";
-    }
-
-    function stopAll(){
-      stopEmbed();
-      stopLocalAudio();
-      setBadge(SOURCE.NONE);
-      $("#trackName").textContent = "Остановлено";
-      $("#artistName").textContent = "Выбери трек в Музыка";
-      markActiveLists();
-    }
-
-    // ---------- EMBEDS ----------
+    // ---------- Embed ----------
     const embedItems = [
-      { title:"Daft Punk — Harder Better Faster Stronger", source:"Spotify Embed", url:"https://open.spotify.com/embed/track/5W3cjX2J3tjhG8zb6u0qHn" },
-      { title:"Radiohead — Creep", source:"Spotify Embed", url:"https://open.spotify.com/embed/track/70LcF31zb1H0PyJoS1Sx1r" },
-      { title:"Never Gonna Give You Up", source:"YouTube Embed", url:"https://www.youtube.com/embed/dQw4w9WgXcQ" },
-      { title:"Coldplay — Viva La Vida", source:"YouTube Embed", url:"https://www.youtube.com/embed/dvgZkm1xWPE" },
+      { id:"e1", title:"Daft Punk — Harder Better Faster Stronger", source:"Spotify", url:"https://open.spotify.com/embed/track/5W3cjX2J3tjhG8zb6u0qHn" },
+      { id:"e2", title:"Radiohead — Creep", source:"Spotify", url:"https://open.spotify.com/embed/track/70LcF31zb1H0PyJoS1Sx1r" },
+      { id:"e3", title:"Never Gonna Give You Up", source:"YouTube", url:"https://www.youtube.com/embed/dQw4w9WgXcQ" },
+      { id:"e4", title:"Coldplay — Viva La Vida", source:"YouTube", url:"https://www.youtube.com/embed/dvgZkm1xWPE" },
     ];
-    let activeEmbed = -1;
+    let activeEmbed = null;
 
     function renderEmbeds(){
       const list = $("#embedList");
+      if(!list) return;
       list.innerHTML = "";
-      embedItems.forEach((it, idx) => {
+      embedItems.forEach(it => {
         const el = document.createElement("div");
-        el.className = "item" + (activeSource===SOURCE.EMBED && idx===activeEmbed ? " active" : "");
+        const isActive = (activeSource === SOURCE.EMBED && activeEmbed === it.id);
+        el.className = "item" + (isActive ? " active" : "");
         el.innerHTML = `<div class="t">${esc(it.title)}</div><div class="d">${esc(it.source)}</div>`;
-        el.addEventListener("click", () => playEmbed(idx));
+        el.addEventListener("click", ()=> playEmbed(it.id));
         list.appendChild(el);
       });
     }
 
-    function playEmbed(idx){
-      if(idx < 0 || idx >= embedItems.length) return;
+    function playEmbed(id){
+      const it = embedItems.find(x => x.id === id);
+      if(!it) return;
 
-      // стопаем local
       stopLocalAudio();
-
-      // гарантируем что старый embed умер
       embedStage.innerHTML = "";
 
-      const it = embedItems[idx];
       const iframe = document.createElement("iframe");
       iframe.allow = "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
       iframe.loading = "lazy";
       iframe.src = it.url;
       embedStage.appendChild(iframe);
 
-      activeEmbed = idx;
+      activeEmbed = it.id;
+      activeTrackId = { kind:"embed", id: it.id };
       setBadge(SOURCE.EMBED);
 
       $("#trackName").textContent = it.title;
       $("#artistName").textContent = it.source;
 
-      markActiveLists();
-      renderEmbeds();
+      renderAll();
     }
 
-    // ---------- Local tracks: IndexedDB ----------
+    // ---------- Local tracks (IndexedDB) ----------
     const DB_NAME = "krs_music_db";
     const DB_VER = 1;
     const STORE = "tracks";
@@ -930,18 +1041,15 @@
       });
     }
 
-    async function dbDeleteAll(){
+    async function dbClear(){
       const db = await openDB();
       return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE, "readwrite");
         tx.objectStore(STORE).clear();
         tx.oncomplete = () => { db.close(); resolve(); };
-        tx.onerror = () => { const e = tx.error; db.close(); reject(e); };
+        tx.onerror = () => { const e=tx.error; db.close(); reject(e); };
       });
     }
-
-    let localTracks = [];
-    let activeLocalId = null;
 
     function fmtBytes(bytes){
       const u = ["B","KB","MB","GB"];
@@ -950,332 +1058,351 @@
       return (i===0? n : n.toFixed(1)) + " " + u[i];
     }
 
-    async function loadLocalTracks(){
-      localTracks = (await dbGetAll()).sort((a,b) => (a.createdAt||0)-(b.createdAt||0));
-      $("#localInfo").textContent = localTracks.length
-        ? `Треков: ${localTracks.length}. Хранятся локально в браузере.`
-        : "Пока нет треков.";
-    }
-
-    function renderLocalList(){
-      const list = $("#localList");
-      list.innerHTML = "";
-      localTracks.forEach(t => {
-        const el = document.createElement("div");
-        const isActive = (activeSource===SOURCE.LOCAL && t.id===activeLocalId);
-        el.className = "item" + (isActive ? " active" : "");
-        el.innerHTML = `
-          <div class="t">${esc(t.title)}</div>
-          <div class="d">Local • ${esc(t.type)} • ${fmtBytes(t.size)}</div>
-          <div class="row" style="margin-top:10px;">
-            <button class="btn2 primary" data-act="play">Играть</button>
-            <button class="btn2" data-act="add">＋ в плейлист</button>
-          </div>
-        `;
-        el.querySelector('[data-act="play"]').addEventListener("click", (e) => {
-          e.stopPropagation();
-          playLocal(t.id);
-        });
-        el.querySelector('[data-act="add"]').addEventListener("click", (e) => {
-          e.stopPropagation();
-          addTrackToSelectedPlaylist(t.id);
-        });
-        el.addEventListener("click", ()=> playLocal(t.id));
-        list.appendChild(el);
-      });
-    }
-
-    function markActiveLists(){
-      // подсветку делаем через renderEmbeds/renderLocalList, тут можно оставить пустым
-    }
-
-    async function playLocal(id){
-      const t = localTracks.find(x => x.id===id);
-      if(!t) return;
-
-      // стопаем embed
-      stopEmbed();
-      activeEmbed = -1;
-      renderEmbeds();
-
-      // включаем local audio
-      const url = URL.createObjectURL(t.blob);
-      stopLocalAudio(); // чтобы не было наложений
-      audio.src = url;
-      audio.style.display = "block";
-      audio.play().catch(()=>{});
-
-      activeLocalId = id;
-      setBadge(SOURCE.LOCAL);
-
-      $("#trackName").textContent = t.title;
-      $("#artistName").textContent = "Local file";
-
-      renderLocalList();
-    }
-
-    // ---------- Upload ----------
-    const fileInput = $("#fileInput");
-    $("#uploadBtn").addEventListener("click", ()=> fileInput.click());
-    $("#btnAddFiles").addEventListener("click", ()=> { openPage("music"); fileInput.click(); });
-
-    fileInput.addEventListener("change", async () => {
-      const files = Array.from(fileInput.files || []);
-      if(!files.length) return;
-
-      for(const f of files){
-        const blob = f; // File is a Blob
-        const id = "t_" + crypto.randomUUID();
-        const title = f.name.replace(/\.[^/.]+$/, "");
-        const track = {
-          id,
-          title,
-          type: f.type || "audio/*",
-          size: f.size || 0,
-          createdAt: Date.now(),
-          blob
-        };
-        await dbPut(track);
+    function parseArtistTitleFromName(name){
+      const base = name.replace(/\.[^/.]+$/, "");
+      const m = base.split(" - ");
+      if(m.length >= 2){
+        const artist = m[0].trim();
+        const title = m.slice(1).join(" - ").trim();
+        return { artist, title };
       }
+      return { artist: "Unknown", title: base.trim() || "Untitled" };
+    }
 
-      fileInput.value = "";
-      await loadLocalTracks();
-      renderLocalList();
-      renderAll();
-    });
+    let localTracks = [];  // {id, kind:"local", artist, title, type, size, createdAt, blob}
+    let repoTracks = [];   // {id, kind:"repo", artist, title, url}
+    let activeTrackId = null; // {kind,id}
 
-    $("#clearLocalBtn").addEventListener("click", async () => {
-      stopAll();
-      await dbDeleteAll();
-      await loadLocalTracks();
-      renderLocalList();
-      renderAll();
-    });
+    // ---------- Repo tracks (manifest) ----------
+    // Опционально: assets/audio/manifest.json
+    // [
+    //   { "url": "assets/audio/Artist - Track.mp3", "artist": "Artist", "title": "Track" }
+    // ]
+    async function loadRepoTracks(){
+      // Fallback list (если manifest.json нет)
+      const fallback = [
+        // { url:"assets/audio/Artist - Track.mp3", artist:"Artist", title:"Track" },
+      ];
 
-    // ---------- Playlists / folders (localStorage) ----------
-    // структура:
-    // krs_tree = { folders:[ {id,name, playlists:[{id,name, trackIds:[]}] } ] }
-    const TREE_KEY = "krs_tree";
-    function defaultTree(){
+      try{
+        const res = await fetch("assets/audio/manifest.json", { cache: "no-store" });
+        if(!res.ok) throw new Error("no manifest");
+        const arr = await res.json();
+        repoTracks = (Array.isArray(arr) ? arr : []).map((x, i) => {
+          const url = String(x.url || "");
+          const a = String(x.artist || "").trim();
+          const t = String(x.title || "").trim();
+          if(url && a && t) return { id:"r_"+i+"_"+hash(url), kind:"repo", artist:a, title:t, url };
+          if(url){
+            const parsed = parseArtistTitleFromName(url.split("/").pop() || url);
+            return { id:"r_"+i+"_"+hash(url), kind:"repo", artist: parsed.artist, title: parsed.title, url };
+          }
+          return null;
+        }).filter(Boolean);
+        if(!repoTracks.length && fallback.length){
+          repoTracks = fallback.map((x,i)=>({ id:"r_f_"+i+"_"+hash(x.url), kind:"repo", artist:x.artist, title:x.title, url:x.url }));
+        }
+      }catch{
+        repoTracks = fallback.map((x,i)=>({ id:"r_f_"+i+"_"+hash(x.url), kind:"repo", artist:x.artist, title:x.title, url:x.url }));
+      }
+    }
+
+    function hash(s){
+      let h=2166136261;
+      for(let i=0;i<s.length;i++){
+        h ^= s.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return (h>>>0).toString(16);
+    }
+
+    async function loadLocalTracks(){
+      const raw = await dbGetAll();
+      localTracks = raw.map(x => {
+        const parsed = parseArtistTitleFromName(x.name || x.title || "Unknown - Untitled");
+        return {
+          id: x.id,
+          kind: "local",
+          artist: x.artist || parsed.artist,
+          title: x.title || parsed.title,
+          name: x.name || (parsed.artist + " - " + parsed.title),
+          type: x.type || "audio/*",
+          size: x.size || 0,
+          createdAt: x.createdAt || 0,
+          blob: x.blob
+        };
+      }).sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
+    }
+
+    // ---------- Playlists ----------
+    const PL_KEY = "krs_playlists_v2";
+    function defaultPlaylists(){
       return {
-        folders: [
-          { id:"f_default", name:"Мои плейлисты", playlists: [
-            { id:"p_fav", name:"Избранное", trackIds: [] }
-          ] }
-        ],
-        selectedFolderId: "f_default",
-        selectedPlaylistId: "p_fav"
+        selected: "pl_all",
+        items: [
+          { id:"pl_all", name:"Все треки", trackRefs: [] }, // виртуальный
+          { id:"pl_fav", name:"Избранное", trackRefs: [] },
+        ]
       };
     }
-    function loadTree(){
+    function loadPL(){
       try{
-        const raw = localStorage.getItem(TREE_KEY);
-        if(!raw) return defaultTree();
-        const t = JSON.parse(raw);
-        if(!t.folders?.length) return defaultTree();
-        return t;
+        const raw = localStorage.getItem(PL_KEY);
+        if(!raw) return defaultPlaylists();
+        const x = JSON.parse(raw);
+        if(!x.items?.length) return defaultPlaylists();
+        return x;
       }catch{
-        return defaultTree();
+        return defaultPlaylists();
       }
     }
-    function saveTree(t){
-      localStorage.setItem(TREE_KEY, JSON.stringify(t));
+    function savePL(x){ localStorage.setItem(PL_KEY, JSON.stringify(x)); }
+    let playlists = loadPL();
+
+    function getPL(id){
+      return playlists.items.find(p => p.id === id) || null;
     }
 
-    let tree = loadTree();
-
-    function findFolder(id){
-      return tree.folders.find(f => f.id===id) || null;
+    function normalizeVirtualAll(){
+      const all = getPL("pl_all");
+      if(!all) return;
+      all.trackRefs = getAllTracks().map(t => ({ kind:t.kind, id:t.id }));
     }
-    function findPlaylist(pid){
-      for(const f of tree.folders){
-        const p = f.playlists.find(x => x.id===pid);
-        if(p) return { folder:f, playlist:p };
+
+    function getAllTracks(){
+      return [...repoTracks, ...localTracks];
+    }
+
+    function addTrackToPlaylist(ref, plId){
+      const pl = getPL(plId);
+      if(!pl || pl.id === "pl_all") return;
+      const key = ref.kind + ":" + ref.id;
+      if(!pl.trackRefs.some(r => (r.kind+":"+r.id) === key)){
+        pl.trackRefs.push({ kind: ref.kind, id: ref.id });
+        savePL(playlists);
       }
+    }
+
+    function removeTrackFromPlaylist(ref, plId){
+      const pl = getPL(plId);
+      if(!pl || pl.id === "pl_all") return;
+      const key = ref.kind + ":" + ref.id;
+      pl.trackRefs = pl.trackRefs.filter(r => (r.kind+":"+r.id) !== key);
+      savePL(playlists);
+    }
+
+    function buildAutoPlaylistsByArtist(){
+      // Создаём/обновляем плейлисты вида "Автор: X"
+      const all = getAllTracks();
+      const by = new Map();
+      for(const t of all){
+        const a = (t.artist || "Unknown").trim() || "Unknown";
+        if(!by.has(a)) by.set(a, []);
+        by.get(a).push({ kind:t.kind, id:t.id });
+      }
+
+      // удалим старые "Автор: "
+      playlists.items = playlists.items.filter(p => !p.id.startsWith("pl_artist_"));
+      for(const [artist, refs] of by.entries()){
+        const id = "pl_artist_" + hash(artist);
+        playlists.items.push({ id, name: "Автор: " + artist, trackRefs: refs });
+      }
+      savePL(playlists);
+    }
+
+    // ---------- Rendering (Music list + Search) ----------
+    function getTrackByRef(ref){
+      if(!ref) return null;
+      if(ref.kind === "local") return localTracks.find(t=>t.id===ref.id) || null;
+      if(ref.kind === "repo") return repoTracks.find(t=>t.id===ref.id) || null;
+      if(ref.kind === "embed") return embedItems.find(t=>t.id===ref.id) || null;
       return null;
     }
 
-    function renderFolders(){
-      const list = $("#foldersList");
-      list.innerHTML = "";
-      tree.folders.forEach(f=>{
-        const el = document.createElement("div");
-        const active = (f.id === tree.selectedFolderId);
-        el.className = "item" + (active ? " active" : "");
-        el.innerHTML = `<div class="t">${esc(f.name)}</div><div class="d">Папка</div>`;
-        el.addEventListener("click", ()=>{
-          tree.selectedFolderId = f.id;
-          // если в папке есть плейлист — выбираем первый
-          const first = f.playlists[0];
-          if(first) tree.selectedPlaylistId = first.id;
-          saveTree(tree);
-          renderPlaylists();
-          renderFolders();
-          renderPlaylistTracks();
-        });
-        list.appendChild(el);
-      });
+    function trackLabel(t){
+      if(!t) return "";
+      if(t.kind === "repo") return "Repo • " + t.artist;
+      if(t.kind === "local") return "Local • " + t.artist + " • " + fmtBytes(t.size);
+      return "";
     }
 
-    function renderPlaylists(){
-      const list = $("#playlistsList");
-      list.innerHTML = "";
-      const folder = findFolder(tree.selectedFolderId);
-      if(!folder){
-        list.innerHTML = `<div class="note">Нет папки</div>`;
-        return;
-      }
-      folder.playlists.forEach(p=>{
-        const el = document.createElement("div");
-        const active = (p.id === tree.selectedPlaylistId);
-        el.className = "item" + (active ? " active" : "");
-        el.innerHTML = `<div class="t">${esc(p.name)}</div><div class="d">Треков: ${p.trackIds.length}</div>`;
-        el.addEventListener("click", ()=>{
-          tree.selectedPlaylistId = p.id;
-          saveTree(tree);
-          renderPlaylists();
-          renderPlaylistTracks();
-        });
-        list.appendChild(el);
-      });
+    function matchesQuery(t, q){
+      if(!q) return true;
+      const s = (t.artist + " " + t.title).toLowerCase();
+      return s.includes(q);
     }
 
-    function renderPlaylistTracks(){
-      const box = $("#playlistTracks");
-      box.innerHTML = "";
+    function renderTracks(){
+      const list = $("#tracksList");
+      if(!list) return;
 
-      const found = findPlaylist(tree.selectedPlaylistId);
-      if(!found){
-        box.innerHTML = `<div class="note">Выбери плейлист</div>`;
-        return;
-      }
-      const p = found.playlist;
-      if(!p.trackIds.length){
-        box.innerHTML = `<div class="note">Плейлист пуст. Добавь трек из вкладки Музыка → Local → “＋ в плейлист”.</div>`;
+      const q = ($("#searchInput").value || "").trim().toLowerCase();
+
+      const all = getAllTracks().filter(t => matchesQuery(t, q));
+      if(!all.length){
+        list.innerHTML = `<div class="note">Ничего не найдено</div>`;
         return;
       }
 
-      // покажем треки (только local)
-      p.trackIds.forEach(id=>{
-        const t = localTracks.find(x => x.id===id);
+      list.innerHTML = "";
+      for(const t of all){
         const el = document.createElement("div");
-        el.className = "item";
-        if(!t){
-          el.innerHTML = `<div class="t">Трек не найден</div><div class="d">${esc(id)}</div>`;
-          box.appendChild(el);
-          return;
-        }
+        const isActive = activeTrackId && activeTrackId.kind === t.kind && activeTrackId.id === t.id && (activeSource === SOURCE.LOCAL || activeSource === SOURCE.REPO);
+        el.className = "item" + (isActive ? " active" : "");
         el.innerHTML = `
-          <div class="t">${esc(t.title)}</div>
-          <div class="d">Local • ${fmtBytes(t.size)}</div>
-          <div class="row" style="margin-top:10px;">
-            <button class="btn2 primary">Играть</button>
-            <button class="btn2">Удалить из плейлиста</button>
+          <div class="t">${esc(t.artist)} — ${esc(t.title)}</div>
+          <div class="d">${esc(trackLabel(t))}</div>
+          <div class="miniRow">
+            <button class="btn2 primary" data-act="play">Играть</button>
+            <button class="btn2" data-act="add">В плейлист</button>
+            <button class="btn2 ghost" data-act="info">?</button>
           </div>
         `;
-        el.querySelectorAll("button")[0].addEventListener("click", ()=> playLocal(t.id));
-        el.querySelectorAll("button")[1].addEventListener("click", ()=>{
-          p.trackIds = p.trackIds.filter(x => x !== t.id);
-          saveTree(tree);
-          renderPlaylistTracks();
-          renderPlaylists();
+        el.querySelector('[data-act="play"]').addEventListener("click", (e)=>{ e.stopPropagation(); playTrack({ kind:t.kind, id:t.id }); });
+        el.querySelector('[data-act="add"]').addEventListener("click", (e)=>{ e.stopPropagation(); openAddToPlaylist({ kind:t.kind, id:t.id }); });
+        el.querySelector('[data-act="info"]').addEventListener("click", (e)=>{
+          e.stopPropagation();
+          showTip("Трек", `${t.artist} — ${t.title}`);
         });
-        box.appendChild(el);
-      });
+        el.addEventListener("click", ()=> playTrack({ kind:t.kind, id:t.id }));
+        list.appendChild(el);
+      }
     }
 
-    $("#createFolderBtn").addEventListener("click", ()=>{
-      const name = ($("#folderName").value || "").trim();
-      if(!name) return;
-      const id = "f_" + crypto.randomUUID();
-      tree.folders.push({ id, name, playlists: [] });
-      tree.selectedFolderId = id;
-      tree.selectedPlaylistId = "";
-      $("#folderName").value = "";
-      saveTree(tree);
-      renderFolders();
-      renderPlaylists();
-      renderPlaylistTracks();
-    });
+    function renderHome(){
+      const stats = $("#homeStats");
+      const recent = $("#homeRecent");
+      if(!stats || !recent) return;
 
-    $("#createPlaylistBtn").addEventListener("click", ()=>{
-      const name = ($("#playlistName").value || "").trim();
-      if(!name) return;
-      const folder = findFolder(tree.selectedFolderId);
-      if(!folder) return;
-      const id = "p_" + crypto.randomUUID();
-      folder.playlists.push({ id, name, trackIds: [] });
-      tree.selectedPlaylistId = id;
-      $("#playlistName").value = "";
-      saveTree(tree);
-      renderPlaylists();
-      renderPlaylistTracks();
-      renderFolders();
-    });
+      const totalRepo = repoTracks.length;
+      const totalLocal = localTracks.length;
+      const totalAll = totalRepo + totalLocal;
+      stats.textContent = `Repo: ${totalRepo} • Local: ${totalLocal} • Всего: ${totalAll}`;
 
-    function addTrackToSelectedPlaylist(trackId){
-      const found = findPlaylist(tree.selectedPlaylistId);
-      if(!found){
-        openPage("playlists");
+      const items = [...localTracks].slice(0, 6);
+      if(!items.length){
+        recent.innerHTML = `<div class="note">Пока пусто. Добавь треки.</div>`;
         return;
       }
-      const p = found.playlist;
-      if(!p.trackIds.includes(trackId)) p.trackIds.push(trackId);
-      saveTree(tree);
-      renderPlaylists();
-      renderPlaylistTracks();
+      recent.innerHTML = "";
+      for(const t of items){
+        const el = document.createElement("div");
+        el.className = "item";
+        el.innerHTML = `
+          <div class="t">${esc(t.artist)} — ${esc(t.title)}</div>
+          <div class="d">Local • ${fmtBytes(t.size)}</div>
+          <div class="miniRow">
+            <button class="btn2 primary">Играть</button>
+            <button class="btn2">В плейлист</button>
+          </div>
+        `;
+        el.querySelectorAll("button")[0].addEventListener("click", ()=> playTrack({ kind:"local", id:t.id }));
+        el.querySelectorAll("button")[1].addEventListener("click", ()=> openAddToPlaylist({ kind:"local", id:t.id }));
+        recent.appendChild(el);
+      }
+    }
+
+    // ---------- Playback ----------
+    function playTrack(ref){
+      const t = getTrackByRef(ref);
+      if(!t) return;
+
+      if(ref.kind === "repo"){
+        stopEmbed();
+        stopLocalAudio();
+        audio.src = t.url;
+        audio.style.display = "block";
+        audio.play().catch(()=>{});
+        activeTrackId = ref;
+        setBadge(SOURCE.REPO);
+        $("#trackName").textContent = `${t.artist} — ${t.title}`;
+        $("#artistName").textContent = "Repo file";
+        renderAll();
+        return;
+      }
+
+      if(ref.kind === "local"){
+        stopEmbed();
+        stopLocalAudio();
+        const tt = localTracks.find(x=>x.id===ref.id);
+        if(!tt) return;
+        const url = URL.createObjectURL(tt.blob);
+        audio.src = url;
+        audio.style.display = "block";
+        audio.play().catch(()=>{});
+        activeTrackId = ref;
+        setBadge(SOURCE.LOCAL);
+        $("#trackName").textContent = `${tt.artist} — ${tt.title}`;
+        $("#artistName").textContent = "Local file";
+        renderAll();
+        return;
+      }
+
+      if(ref.kind === "embed"){
+        playEmbed(ref.id);
+        return;
+      }
     }
 
     // ---------- Player controls ----------
-    // prev/next: по Local списку если activeSource=Local, иначе по embed списку
-    $("#prevBtn").addEventListener("click", ()=>{
-      if(activeSource === SOURCE.LOCAL){
-        if(!localTracks.length) return;
-        const idx = Math.max(0, localTracks.findIndex(t => t.id===activeLocalId));
-        const next = (idx<=0) ? (localTracks.length-1) : (idx-1);
-        playLocal(localTracks[next].id);
-        return;
+    function listForNav(){
+      // навигация по текущему плейлисту, если открыт, иначе по поиску/всем
+      const pl = getPL(playlists.selected);
+      if(pl && pl.trackRefs?.length){
+        return pl.trackRefs.filter(r => r.kind !== "embed"); // плеер управляет local/repo
       }
-      if(activeSource === SOURCE.EMBED){
-        if(!embedItems.length) return;
-        const next = (activeEmbed<=0) ? (embedItems.length-1) : (activeEmbed-1);
-        playEmbed(next);
-        return;
-      }
-    });
+      // fallback: все треки
+      return getAllTracks().map(t => ({ kind:t.kind, id:t.id }));
+    }
 
-    $("#nextBtn").addEventListener("click", ()=>{
-      if(activeSource === SOURCE.LOCAL){
-        if(!localTracks.length) return;
-        const idx = Math.max(0, localTracks.findIndex(t => t.id===activeLocalId));
-        const next = (idx<0) ? 0 : ((idx+1) % localTracks.length);
-        playLocal(localTracks[next].id);
-        return;
-      }
+    function navStep(dir){
       if(activeSource === SOURCE.EMBED){
-        if(!embedItems.length) return;
-        const next = (activeEmbed<0) ? 0 : ((activeEmbed+1) % embedItems.length);
-        playEmbed(next);
+        // embed: prev/next по embedItems
+        const idx = embedItems.findIndex(x=>x.id===activeEmbed);
+        const next = (idx < 0)
+          ? 0
+          : (dir < 0 ? (idx<=0 ? embedItems.length-1 : idx-1) : ((idx+1)%embedItems.length));
+        playEmbed(embedItems[next].id);
         return;
       }
-    });
+
+      const list = listForNav();
+      if(!list.length) return;
+
+      const curKey = activeTrackId ? (activeTrackId.kind + ":" + activeTrackId.id) : "";
+      const idx = list.findIndex(r => (r.kind+":"+r.id) === curKey);
+
+      let nextIdx;
+      if(idx < 0) nextIdx = 0;
+      else nextIdx = dir < 0 ? (idx<=0 ? list.length-1 : idx-1) : ((idx+1)%list.length);
+
+      playTrack(list[nextIdx]);
+    }
+
+    $("#prevBtn").addEventListener("click", ()=> navStep(-1));
+    $("#nextBtn").addEventListener("click", ()=> navStep(+1));
 
     $("#playBtn").addEventListener("click", ()=>{
-      if(activeSource === SOURCE.LOCAL){
+      if(activeSource === SOURCE.EMBED){
+        if(!activeEmbed) playEmbed(embedItems[0]?.id);
+        else playEmbed(activeEmbed); // перезапуск
+        return;
+      }
+
+      if(audio.style.display !== "none" && audio.src){
         if(audio.paused) audio.play().catch(()=>{});
         else audio.pause();
-        $("#playBtn").textContent = audio.paused ? "▶" : "⏸";
         return;
       }
-      if(activeSource === SOURCE.EMBED){
-        // для embed прямой play/pause без API нет, делаем “перезапуск” текущего
-        if(activeEmbed < 0) playEmbed(0);
-        else playEmbed(activeEmbed);
+
+      // старт: если есть активный — играть его, иначе первый трек
+      if(activeTrackId && activeTrackId.kind !== "embed"){
+        playTrack(activeTrackId);
         return;
       }
-      // если ничего не выбрано — стартуем первый local или embed
-      if(localTracks.length) playLocal(localTracks[0].id);
-      else if(embedItems.length) playEmbed(0);
+
+      const all = getAllTracks();
+      if(all.length) playTrack({ kind: all[0].kind, id: all[0].id });
     });
 
     $("#stopBtn").addEventListener("click", ()=>{
@@ -1287,9 +1414,269 @@
     audio.addEventListener("pause", ()=> $("#playBtn").textContent = "▶");
     audio.addEventListener("ended", ()=> $("#playBtn").textContent = "▶");
 
+    // ---------- Add to playlist (from player + list) ----------
+    function openAddToPlaylist(ref){
+      if(!ref){
+        if(!activeTrackId) return;
+        ref = activeTrackId;
+      }
+      if(ref.kind === "embed"){
+        showTip("В плейлист", "Embed треки сейчас не добавляются в плейлисты. Добавляются Local/Repo.");
+        return;
+      }
+
+      const names = playlists.items.filter(p => p.id !== "pl_all").map(p => p.name);
+      if(!names.length){
+        showTip("В плейлист", "Создай плейлист во вкладке Плейлисты.");
+        return;
+      }
+
+      // маленький выбор через prompt
+      const plNames = playlists.items.filter(p => p.id !== "pl_all").map(p => p.name);
+      const chosen = prompt("Куда добавить. Введи точное название плейлиста:\n" + plNames.join("\n"));
+      if(!chosen) return;
+
+      const pl = playlists.items.find(p => p.id !== "pl_all" && p.name === chosen);
+      if(!pl){
+        showTip("В плейлист", "Не найден плейлист с таким названием.");
+        return;
+      }
+      addTrackToPlaylist(ref, pl.id);
+      showTip("Готово", "Добавлено в: " + pl.name);
+      renderAll();
+    }
+
+    $("#addToPlBtn").addEventListener("click", ()=> openAddToPlaylist(null));
+
+    // ---------- Playlists UI ----------
+    function renderPlaylists(){
+      normalizeVirtualAll();
+
+      const list = $("#plList");
+      const title = $("#plTitle");
+      const meta = $("#plMeta");
+      const tracks = $("#plTracks");
+      if(!list || !title || !meta || !tracks) return;
+
+      // ensure selected exists
+      if(!getPL(playlists.selected)) playlists.selected = "pl_all";
+
+      list.innerHTML = "";
+      for(const p of playlists.items){
+        const el = document.createElement("div");
+        const active = (p.id === playlists.selected);
+        el.className = "item" + (active ? " active" : "");
+        el.innerHTML = `<div class="t">${esc(p.name)}</div><div class="d">Треков: ${p.trackRefs.length}</div>`;
+        el.addEventListener("click", ()=>{
+          playlists.selected = p.id;
+          savePL(playlists);
+          renderPlaylists();
+        });
+        list.appendChild(el);
+      }
+
+      const pl = getPL(playlists.selected);
+      title.textContent = pl ? pl.name : "Плейлист";
+      meta.textContent = pl ? `Треков: ${pl.trackRefs.length}` : "—";
+
+      tracks.innerHTML = "";
+      if(!pl || !pl.trackRefs.length){
+        tracks.innerHTML = `<div class="note">Пусто</div>`;
+        return;
+      }
+
+      for(const ref of pl.trackRefs){
+        const t = getTrackByRef(ref);
+        const el = document.createElement("div");
+        el.className = "item";
+        if(!t){
+          el.innerHTML = `<div class="t">Трек не найден</div><div class="d">${esc(ref.kind + ":" + ref.id)}</div>`;
+          tracks.appendChild(el);
+          continue;
+        }
+        el.innerHTML = `
+          <div class="t">${esc(t.artist)} — ${esc(t.title)}</div>
+          <div class="d">${esc(trackLabel(t))}</div>
+          <div class="miniRow">
+            <button class="btn2 primary">Играть</button>
+            <button class="btn2">Убрать</button>
+          </div>
+        `;
+        el.querySelectorAll("button")[0].addEventListener("click", ()=> playTrack(ref));
+        el.querySelectorAll("button")[1].addEventListener("click", ()=>{
+          removeTrackFromPlaylist(ref, pl.id);
+          renderPlaylists();
+        });
+        tracks.appendChild(el);
+      }
+    }
+
+    $("#plNew").addEventListener("click", ()=>{
+      const name = prompt("Название плейлиста");
+      if(!name) return;
+      const id = "pl_" + crypto.randomUUID();
+      playlists.items.push({ id, name: name.trim(), trackRefs: [] });
+      playlists.selected = id;
+      savePL(playlists);
+      renderPlaylists();
+    });
+
+    $("#plRename").addEventListener("click", ()=>{
+      const pl = getPL(playlists.selected);
+      if(!pl || pl.id === "pl_all"){ showTip("Переименовать", "Это системный плейлист."); return; }
+      const name = prompt("Новое имя", pl.name);
+      if(!name) return;
+      pl.name = name.trim();
+      savePL(playlists);
+      renderPlaylists();
+    });
+
+    $("#plDelete").addEventListener("click", ()=>{
+      const pl = getPL(playlists.selected);
+      if(!pl || pl.id === "pl_all"){ showTip("Удалить", "Это системный плейлист."); return; }
+      if(!confirm("Удалить плейлист: " + pl.name + " ?")) return;
+      playlists.items = playlists.items.filter(x => x.id !== pl.id);
+      playlists.selected = "pl_all";
+      savePL(playlists);
+      renderPlaylists();
+    });
+
+    $("#plPlayAll").addEventListener("click", ()=>{
+      const pl = getPL(playlists.selected);
+      if(!pl || !pl.trackRefs.length) return;
+      playTrack(pl.trackRefs[0]);
+    });
+
+    $("#plClear").addEventListener("click", ()=>{
+      const pl = getPL(playlists.selected);
+      if(!pl || pl.id === "pl_all") return;
+      pl.trackRefs = [];
+      savePL(playlists);
+      renderPlaylists();
+    });
+
+    $("#plHelp").addEventListener("click", ()=> showTip("Плейлисты", "Добавляй треки кнопкой 'В плейлист' в Музыке или в нижнем баре. Переименовать и удалить — сверху."));
+    $("#plAbout").addEventListener("click", ()=> showTip("Что это", "Плейлисты хранятся в браузере. Для общего доступа всем будет нужен сервер/база."));
+
+    // ---------- Import UI ----------
+    const fileInput = $("#fileInput");
+    const folderInput = $("#folderInput");
+    const zipInput = $("#zipInput");
+
+    $("#btnFiles").addEventListener("click", ()=> fileInput.click());
+    $("#btnFolder").addEventListener("click", ()=> folderInput.click());
+    $("#btnZip").addEventListener("click", ()=> zipInput.click());
+    $("#btnHowImport").addEventListener("click", ()=> showTip("Импорт", "Файлы и папка добавляются в Local (этот браузер). ZIP распаковывается в браузере, берутся только аудиофайлы."));
+    $("#btnClearLocal").addEventListener("click", async ()=>{
+      if(!confirm("Очистить Local?")) return;
+      stopAll();
+      await dbClear();
+      await loadLocalTracks();
+      renderAll();
+    });
+
+    async function importFiles(files, label){
+      const arr = Array.from(files || []);
+      if(!arr.length) return;
+      $("#importInfo").textContent = "Импорт: " + label + " • файлов: " + arr.length;
+
+      let ok = 0;
+      for(const f of arr){
+        if(!f.type.startsWith("audio/")) continue;
+        const parsed = parseArtistTitleFromName(f.name);
+        const id = "t_" + crypto.randomUUID();
+        await dbPut({
+          id,
+          name: f.name,
+          artist: parsed.artist,
+          title: parsed.title,
+          type: f.type || "audio/*",
+          size: f.size || 0,
+          createdAt: Date.now(),
+          blob: f
+        });
+        ok++;
+      }
+      $("#importInfo").textContent = "Импорт готов • добавлено: " + ok;
+      await loadLocalTracks();
+      renderAll();
+    }
+
+    fileInput.addEventListener("change", async ()=> {
+      await importFiles(fileInput.files, "Файлы");
+      fileInput.value = "";
+    });
+
+    folderInput.addEventListener("change", async ()=> {
+      await importFiles(folderInput.files, "Папка");
+      folderInput.value = "";
+    });
+
+    zipInput.addEventListener("change", async ()=> {
+      const f = zipInput.files?.[0];
+      if(!f) return;
+      $("#importInfo").textContent = "ZIP распаковка...";
+      try{
+        const zip = await JSZip.loadAsync(f);
+        const audioFiles = [];
+        const exts = [".mp3",".wav",".ogg",".m4a",".aac",".flac"];
+        for(const [path, entry] of Object.entries(zip.files)){
+          if(entry.dir) continue;
+          const low = path.toLowerCase();
+          if(!exts.some(e=>low.endsWith(e))) continue;
+          audioFiles.push({ path, entry });
+        }
+        let ok = 0;
+        for(const af of audioFiles){
+          const blob = await af.entry.async("blob");
+          const name = af.path.split("/").pop() || af.path;
+          const typeGuess = "audio/*";
+          const parsed = parseArtistTitleFromName(name);
+          const id = "t_" + crypto.randomUUID();
+          await dbPut({
+            id,
+            name,
+            artist: parsed.artist,
+            title: parsed.title,
+            type: typeGuess,
+            size: blob.size || 0,
+            createdAt: Date.now(),
+            blob
+          });
+          ok++;
+        }
+        $("#importInfo").textContent = "ZIP готов • добавлено: " + ok;
+        await loadLocalTracks();
+        renderAll();
+      }catch{
+        $("#importInfo").textContent = "ZIP не прочитан";
+      }finally{
+        zipInput.value = "";
+      }
+    });
+
+    // ---------- Home actions ----------
+    $("#homeAdd").addEventListener("click", ()=> { openPage("music"); fileInput.click(); });
+    $("#homeAuto").addEventListener("click", ()=>{
+      buildAutoPlaylistsByArtist();
+      playlists.selected = "pl_all";
+      savePL(playlists);
+      openPage("playlists");
+      showTip("Авто-плейлисты", "Созданы плейлисты 'Автор: ...' из имён файлов вида 'Автор - Название'.");
+      renderAll();
+    });
+    $("#homeEmbed").addEventListener("click", ()=> openPage("embed"));
+    $("#homeHelp").addEventListener("click", ()=> showTip("Главная", "Тут быстрые действия и недавние Local треки."));
+    $("#homeGoMusic").addEventListener("click", ()=> openPage("music"));
+    $("#homeGoPlaylists").addEventListener("click", ()=> openPage("playlists"));
+
+    // ---------- Search ----------
+    $("#searchInput").addEventListener("input", ()=> {
+      renderTracks();
+    });
+
     // ---------- Settings ----------
-    // применяем сохранённые
-    const s0 = loadLS("krs_s", getComputedStyle(root).getPropertyValue("--s").trim() || "1.10");
+    const s0 = loadLS("krs_s", getComputedStyle(root).getPropertyValue("--s").trim() || "1.08");
     const d0 = loadLS("krs_density", getComputedStyle(root).getPropertyValue("--density").trim() || "1.00");
     const a0 = loadLS("krs_accent", getComputedStyle(root).getPropertyValue("--accent").trim() || "#ffb347");
     const b0 = loadLS("krs_bg", document.body.getAttribute("data-bg") || "1");
@@ -1316,15 +1703,13 @@
     $("#sunrisePower").value = sunPow0;
     $("#rainCount").value = rainCount0;
 
-    function setToggle(el, on){
-      el.classList.toggle("on", !!on);
-    }
+    function setToggle(el, on){ el.classList.toggle("on", !!on); }
     const tglSunrise = $("#tglSunrise");
     const tglRain = $("#tglRain");
     const tglRainFront = $("#tglRainFront");
     setToggle(tglSunrise, Number(sunOn0)===1);
     setToggle(tglRain, Number(rainOn0)===1);
-    setToggle(tglRainFront, Number(rainFront0)===1);
+    setToggle(tglRainFront, String(rainFront0)==="1");
 
     $("#uiScale").addEventListener("input", e=>{ root.style.setProperty("--s", e.target.value); saveLS("krs_s", e.target.value); });
     $("#density").addEventListener("input", e=>{ root.style.setProperty("--density", e.target.value); saveLS("krs_density", e.target.value); });
@@ -1363,7 +1748,7 @@
       rebuildDrops();
     });
 
-    // ---------- Rain build ----------
+    // ---------- Rain ----------
     const rainLayer = $("#rain");
     let drops = [];
     function rebuildDrops(){
@@ -1372,51 +1757,59 @@
       const on = Number(getComputedStyle(root).getPropertyValue("--rainOn").trim())===1;
       const count = Number(getComputedStyle(root).getPropertyValue("--rainCount").trim()) || 0;
       if(!on || count<=0) return;
-
       const w = window.innerWidth;
-
       for(let i=0;i<count;i++){
         const d = document.createElement("div");
         d.className = "droplet";
-
         const left = Math.random()*w;
-        const size = 6 + Math.random()*16;     // 6..22
-        const dur  = 3.2 + Math.random()*7.2;  // 3.2..10.4
+        const size = 6 + Math.random()*16;
+        const dur  = 3.2 + Math.random()*7.2;
         const delay= Math.random()*2.4;
         const op   = 0.16 + Math.random()*0.34;
-
         d.style.left = left + "px";
         d.style.width = size + "px";
         d.style.height = size + "px";
         d.style.animationDuration = dur + "s";
         d.style.animationDelay = delay + "s";
         d.style.opacity = op;
-
         rainLayer.appendChild(d);
         drops.push(d);
       }
     }
     window.addEventListener("resize", rebuildDrops);
 
+    // ---------- Add-to-playlist in player ----------
+    $("#addToPlBtn").addEventListener("click", ()=> {
+      if(!activeTrackId) { showTip("В плейлист", "Сначала выбери трек."); return; }
+      openAddToPlaylist(activeTrackId);
+    });
+
     // ---------- Render all ----------
     async function renderAll(){
       renderEmbeds();
-      await loadLocalTracks();
-      renderLocalList();
-      renderFolders();
+      normalizeVirtualAll();
       renderPlaylists();
-      renderPlaylistTracks();
+      renderTracks();
+      renderHome();
+      updateImportInfo();
     }
 
-    // ---------- Hook buttons ----------
-    $("#btnAddFiles").addEventListener("click", ()=> $("#fileInput").click());
+    function updateImportInfo(){
+      const el = $("#importInfo");
+      if(!el) return;
+      el.textContent = `Repo: ${repoTracks.length} • Local: ${localTracks.length}`;
+      const hs = $("#homeStats");
+      if(hs) hs.textContent = `Repo: ${repoTracks.length} • Local: ${localTracks.length} • Всего: ${repoTracks.length + localTracks.length}`;
+    }
 
     // ---------- Init ----------
     (async ()=>{
-      openPage("home");
-      await renderAll();
+      await loadRepoTracks();
+      await loadLocalTracks();
       rebuildDrops();
       setBadge(SOURCE.NONE);
+      openPage("home");
+      renderAll();
     })();
   </script>
 </body>
