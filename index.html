@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Краски Рассвета — Music Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --bg-main:#0b0d14;
+  --panel:#11131d;
+  --panel-soft:#16192a;
+
+  /* РАССВЕТНЫЕ ЦВЕТА */
+  --sun-main:#ffb347;
+  --sun-pink:#ff6fae;
+  --sun-blue:#6ecbff;
+
+  --text:#f1f3ff;
+  --text-soft:#a7abc8;
+
+  --radius:16px;
+  --blur:12px;
+}
+
+/* RESET */
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  height:100vh;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background:
+    radial-gradient(900px 600px at 20% -10%, rgba(255,179,71,.35), transparent 60%),
+    radial-gradient(800px 500px at 90% 10%, rgba(110,203,255,.25), transparent 60%),
+    radial-gradient(700px 400px at 50% 90%, rgba(255,111,174,.20), transparent 65%),
+    var(--bg-main);
+  color:var(--text);
+  overflow:hidden;
+}
+
+/* ====== LAYOUT ====== */
+
+.app{
+  display:grid;
+  grid-template-columns:260px 1fr;
+  grid-template-rows:1fr 90px;
+  gap:12px;
+  height:100%;
+  padding:12px;
+}
+
+/* ====== SIDEBAR ====== */
+
+.sidebar{
+  background:rgba(17,19,29,.85);
+  backdrop-filter:blur(var(--blur));
+  border-radius:var(--radius);
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  border:1px solid rgba(255,255,255,.06);
+}
+
+.logo{
+  font-weight:900;
+  font-size:18px;
+  background:linear-gradient(90deg,var(--sun-main),var(--sun-pink));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.nav{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.nav button{
+  background:none;
+  border:none;
+  color:var(--text);
+  text-align:left;
+  padding:12px 14px;
+  border-radius:12px;
+  font-weight:700;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.nav button:hover{
+  background:rgba(255,255,255,.06);
+}
+
+.nav button.active{
+  background:linear-gradient(90deg,rgba(255,179,71,.25),rgba(255,111,174,.15));
+  border:1px solid rgba(255,179,71,.4);
+}
+
+.key{
+  font-size:11px;
+  opacity:.6;
+}
+
+/* ====== MAIN ====== */
+
+.main{
+  background:rgba(17,19,29,.85);
+  backdrop-filter:blur(var(--blur));
+  border-radius:var(--radius);
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  border:1px solid rgba(255,255,255,.06);
+}
+
+/* SEARCH BAR */
+
+.topbar{
+  display:flex;
+  gap:12px;
+}
+
+.search{
+  flex:1;
+  background:rgba(255,255,255,.05);
+  border-radius:999px;
+  padding:10px 14px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.search input{
+  background:none;
+  border:none;
+  outline:none;
+  color:white;
+  width:100%;
+  font-size:14px;
+}
+
+/* ====== CONTENT ====== */
+
+.content{
+  margin-top:14px;
+  overflow:auto;
+  padding-right:6px;
+}
+
+/* HERO */
+
+.hero{
+  padding:18px;
+  border-radius:18px;
+  background:
+    radial-gradient(600px 300px at 30% 0%, rgba(255,179,71,.25), transparent 60%),
+    radial-gradient(500px 300px at 80% 0%, rgba(110,203,255,.25), transparent 60%),
+    rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.hero h1{
+  font-size:22px;
+}
+
+.hero p{
+  margin-top:6px;
+  color:var(--text-soft);
+}
+
+/* GRID */
+
+.section{
+  margin-top:18px;
+}
+
+.section h2{
+  font-size:16px;
+  margin-bottom:10px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:12px;
+}
+
+/* CARD */
+
+.card{
+  background:rgba(255,255,255,.04);
+  border-radius:14px;
+  padding:10px;
+  cursor:pointer;
+  transition:.15s;
+  border:1px solid rgba(255,255,255,.06);
+  position:relative;
+}
+
+.card:hover{
+  transform:translateY(-2px);
+  background:rgba(255,255,255,.07);
+}
+
+.cover{
+  aspect-ratio:1/1;
+  border-radius:12px;
+  background:
+    linear-gradient(135deg,var(--sun-main),var(--sun-pink),var(--sun-blue));
+}
+
+.card h3{
+  font-size:13px;
+  margin-top:8px;
+}
+
+.card span{
+  font-size:11px;
+  color:var(--text-soft);
+}
+
+/* PLAY BUTTON */
+
+.playBtn{
+  position:absolute;
+  bottom:58px;
+  right:12px;
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  border:none;
+  background:var(--sun-main);
+  font-weight:900;
+  cursor:pointer;
+  display:none;
+}
+
+.card:hover .playBtn{
+  display:block;
+}
+
+/* ====== PLAYER ====== */
+
+.player{
+  grid-column:1/3;
+  background:rgba(17,19,29,.9);
+  backdrop-filter:blur(var(--blur));
+  border-radius:var(--radius);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 18px;
+  border:1px solid rgba(255,255,255,.06);
+}
+
+.track{
+  font-weight:700;
+}
+
+.controls{
+  display:flex;
+  gap:12px;
+}
+
+.controls button{
+  background:rgba(255,255,255,.08);
+  border:none;
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  cursor:pointer;
+  color:white;
+}
+
+.controls button.main{
+  background:var(--sun-main);
+  color:black;
+  font-weight:900;
+}
+
+/* ====== SCROLL ====== */
+
+.content::-webkit-scrollbar{
+  width:6px;
+}
+.content::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,.15);
+  border-radius:999px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+
+<div class="logo">Краски Рассвета</div>
+
+<div class="nav">
+<button class="active" data-page="home">🏠 Главная <span class="key">H</span></button>
+<button data-page="search">🔍 Поиск <span class="key">S</span></button>
+<button data-page="playlists">🎵 Плейлисты <span class="key">P</span></button>
+<button data-page="library">📚 Библиотека <span class="key">B</span></button>
+</div>
+
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<div class="topbar">
+<div class="search">
+🔍
+<input id="searchInput" placeholder="Поиск треков, плейлистов...">
+</div>
+</div>
+
+<div class="content">
+
+<!-- HOME -->
+<div id="page-home">
+
+<div class="hero">
+<h1>Добро пожаловать</h1>
+<p>Музыкальный рассвет. Твоя атмосфера. Управление с клавиатуры.</p>
+</div>
+
+<div class="section">
+<h2>Для тебя</h2>
+<div class="grid" id="homeGrid"></div>
+</div>
+
+</div>
+
+<!-- SEARCH -->
+<div id="page-search" style="display:none">
+<div class="hero">
+<h1>Поиск</h1>
+<p>Нажми S и начинай печатать</p>
+</div>
+</div>
+
+<!-- PLAYLISTS -->
+<div id="page-playlists" style="display:none">
+<div class="hero">
+<h1>Плейлисты</h1>
+<p>Твои и публичные подборки</p>
+</div>
+</div>
+
+<!-- LIBRARY -->
+<div id="page-library" style="display:none">
+<div class="hero">
+<h1>Библиотека</h1>
+<p>Сохранённые треки</p>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- PLAYER -->
+<div class="player">
+
+<div class="track" id="trackName">Neon Sunrise — Demo Artist</div>
+
+<div class="controls">
+<button>⏮</button>
+<button id="playBtn" class="main">▶</button>
+<button>⏭</button>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+// ===== DEMO DATA =====
+const demoPlaylists = [
+  "Sunrise Chill",
+  "Morning Energy",
+  "Golden Hour",
+  "Night Ride",
+  "Soft Pop",
+  "Dream Flow"
+];
+
+// ===== CREATE CARDS =====
+
+const grid = document.getElementById("homeGrid");
+
+demoPlaylists.forEach(name=>{
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <div class="cover"></div>
+    <button class="playBtn">▶</button>
+    <h3>${name}</h3>
+    <span>Плейлист</span>
+  `;
+  grid.appendChild(card);
+});
+
+// ===== NAVIGATION =====
+
+const pages = ["home","search","playlists","library"];
+const buttons = document.querySelectorAll(".nav button");
+
+function openPage(name){
+  pages.forEach(p=>{
+    document.getElementById("page-"+p).style.display = (p===name)?"block":"none";
+  });
+
+  buttons.forEach(b=>{
+    b.classList.toggle("active", b.dataset.page===name);
+  });
+
+  if(name==="search"){
+    document.getElementById("searchInput").focus();
+  }
+}
+
+// ===== HOTKEYS =====
+
+document.addEventListener("keydown",(e)=>{
+
+  const tag = document.activeElement.tagName.toLowerCase();
+  if(tag==="input") return;
+
+  const k = e.key.toLowerCase();
+
+  if(k==="h") openPage("home");
+  if(k==="s") openPage("search");
+  if(k==="p") openPage("playlists");
+  if(k==="b") openPage("library");
+
+  if(k===" "){
+    e.preventDefault();
+    togglePlay();
+  }
+});
+
+// ===== PLAYER =====
+
+let playing = false;
+const playBtn = document.getElementById("playBtn");
+
+function togglePlay(){
+  playing = !playing;
+  playBtn.textContent = playing ? "⏸" : "▶";
+}
+
+playBtn.onclick = togglePlay;
+
+// DEFAULT
+openPage("home");
+
+</script>
+
+</body>
+</html>
