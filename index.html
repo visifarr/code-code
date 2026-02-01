@@ -7,140 +7,171 @@
 
   <style>
     :root{
-      /* масштаб */
-      --s: 1;
-
-      /* базовые */
-      --bg:#0b0d14;
-      --panel: rgba(17,19,29,.86);
+      --s: 1.05;                 /* масштаб UI */
+      --bg:#070914;
+      --panel: rgba(14,16,28,.86);
       --stroke: rgba(255,255,255,.07);
       --text:#f1f3ff;
       --muted:#a7abc8;
 
-      /* рассветные */
-      --sun: #ffb347;
+      /* акцент */
+      --accent:#ffb347;          /* меняется в настройках */
       --pink:#ff6fae;
       --sky:#6ecbff;
 
-      /* формы */
       --r: calc(16px * var(--s));
-      --blur: 12px;
       --pad: calc(12px * var(--s));
       --gap: calc(12px * var(--s));
+      --blur: 12px;
 
-      /* плеер */
-      --playerH: calc(92px * var(--s));
+      --playerH: calc(96px * var(--s));
 
       /* эффекты */
-      --sunriseOpacity: .55;
-      --rainOn: 0; /* 0/1 */
-      --rainIntensity: 22; /* 0..80 */
-      --sunriseOn: 1; /* 0/1 */
+      --sunriseOn: 1;            /* 0/1 */
+      --sunrisePower: .70;       /* 0..1 */
+      --rainOn: 0;               /* 0/1 */
+      --rainCount: 26;           /* 0..120 */
+      --bgPreset: 1;             /* 1..4 */
     }
 
-    *{ box-sizing: border-box; }
-    html, body { height: 100%; }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      color: var(--text);
+      color:var(--text);
       background: var(--bg);
       overflow:hidden;
     }
 
-    /* фон-рассвет */
+    /* ===== BACKGROUND PRESETS ===== */
     .bg{
-      position: fixed;
-      inset: 0;
-      z-index: 0;
+      position:fixed; inset:0; z-index:0;
+      background: var(--bg);
+    }
+
+    .bg::before{
+      content:"";
+      position:absolute; inset:0;
+      opacity: 1;
       background:
-        radial-gradient(900px 600px at 18% -10%, color-mix(in srgb, var(--sun) 35%, transparent), transparent 60%),
-        radial-gradient(800px 520px at 92% 8%, color-mix(in srgb, var(--sky) 28%, transparent), transparent 62%),
-        radial-gradient(700px 420px at 50% 92%, color-mix(in srgb, var(--pink) 22%, transparent), transparent 68%),
+        radial-gradient(1100px 700px at 18% -10%, color-mix(in srgb, var(--accent) 40%, transparent), transparent 60%),
+        radial-gradient(900px 620px at 92% 10%, color-mix(in srgb, var(--sky) 28%, transparent), transparent 62%),
+        radial-gradient(800px 520px at 50% 92%, color-mix(in srgb, var(--pink) 22%, transparent), transparent 68%),
+        linear-gradient(180deg, rgba(255,255,255,.02), transparent 35%),
         var(--bg);
-      filter: saturate(1.05);
+      filter:saturate(1.08) contrast(1.04);
     }
 
-    .sunriseOverlay{
-      position: fixed;
-      inset: -20%;
-      z-index: 0;
-      pointer-events:none;
-      opacity: calc(var(--sunriseOpacity) * var(--sunriseOn));
+    /* пресеты (меняем через data атрибут на body) */
+    body[data-bg="1"] .bg::before{
       background:
-        radial-gradient(900px 420px at 30% 10%, color-mix(in srgb, var(--sun) 45%, transparent), transparent 60%),
-        radial-gradient(780px 380px at 70% 20%, color-mix(in srgb, var(--pink) 35%, transparent), transparent 65%),
-        radial-gradient(820px 520px at 50% 100%, color-mix(in srgb, var(--sky) 26%, transparent), transparent 70%);
-      animation: sunriseMove 18s ease-in-out infinite;
-      transform-origin: 50% 50%;
+        radial-gradient(1100px 700px at 18% -10%, color-mix(in srgb, var(--accent) 40%, transparent), transparent 60%),
+        radial-gradient(900px 620px at 92% 10%, color-mix(in srgb, var(--sky) 28%, transparent), transparent 62%),
+        radial-gradient(800px 520px at 50% 92%, color-mix(in srgb, var(--pink) 22%, transparent), transparent 68%),
+        linear-gradient(180deg, rgba(255,255,255,.02), transparent 35%),
+        var(--bg);
+    }
+    body[data-bg="2"] .bg::before{
+      background:
+        radial-gradient(1000px 700px at 20% 0%, rgba(255,179,71,.30), transparent 60%),
+        radial-gradient(980px 520px at 80% 10%, rgba(255,111,174,.22), transparent 62%),
+        radial-gradient(900px 520px at 50% 100%, rgba(110,203,255,.18), transparent 68%),
+        radial-gradient(700px 380px at 40% 40%, rgba(255,255,255,.03), transparent 70%),
+        var(--bg);
+    }
+    body[data-bg="3"] .bg::before{
+      background:
+        radial-gradient(1000px 700px at 10% 0%, rgba(110,203,255,.26), transparent 60%),
+        radial-gradient(980px 520px at 90% 10%, rgba(255,179,71,.22), transparent 62%),
+        radial-gradient(900px 520px at 50% 100%, rgba(255,111,174,.16), transparent 68%),
+        linear-gradient(180deg, rgba(255,255,255,.02), transparent 45%),
+        var(--bg);
+    }
+    body[data-bg="4"] .bg::before{
+      background:
+        radial-gradient(1000px 640px at 30% -10%, rgba(255,111,174,.26), transparent 62%),
+        radial-gradient(900px 540px at 75% 10%, rgba(110,203,255,.18), transparent 62%),
+        radial-gradient(980px 680px at 50% 110%, rgba(255,179,71,.20), transparent 66%),
+        radial-gradient(800px 520px at 20% 60%, rgba(255,255,255,.03), transparent 70%),
+        var(--bg);
     }
 
-    @keyframes sunriseMove{
-      0%   { transform: translate3d(-1.5%, -1.0%, 0) scale(1.02); filter: blur(0px); }
-      50%  { transform: translate3d( 1.8%,  1.2%, 0) scale(1.05); filter: blur(1px); }
-      100% { transform: translate3d(-1.5%, -1.0%, 0) scale(1.02); filter: blur(0px); }
-    }
-
-    /* дождь */
-    .rain{
-      position: fixed;
-      inset: 0;
-      z-index: 1;
+    /* ===== SUNRISE OVERLAY (медленный рассвет) ===== */
+    .sunrise{
+      position:fixed; inset:-18%; z-index:1;
       pointer-events:none;
-      opacity: calc(.9 * var(--rainOn));
+      opacity: calc(var(--sunriseOn) * var(--sunrisePower));
+      background:
+        radial-gradient(900px 420px at 26% 10%, color-mix(in srgb, var(--accent) 42%, transparent), transparent 62%),
+        radial-gradient(780px 380px at 72% 18%, color-mix(in srgb, var(--pink) 34%, transparent), transparent 66%),
+        radial-gradient(900px 560px at 50% 100%, color-mix(in srgb, var(--sky) 26%, transparent), transparent 72%);
+      animation: sunriseMove 18s ease-in-out infinite;
+      filter: blur(.6px);
+      transform-origin:50% 50%;
+    }
+    @keyframes sunriseMove{
+      0%   { transform: translate3d(-1.4%, -1.0%, 0) scale(1.02); }
+      50%  { transform: translate3d( 1.6%,  1.2%, 0) scale(1.05); }
+      100% { transform: translate3d(-1.4%, -1.0%, 0) scale(1.02); }
+    }
+
+    /* ===== RAIN LAYER ===== */
+    .rain{
+      position:fixed; inset:0; z-index:2;
+      pointer-events:none;
+      opacity: calc(.95 * var(--rainOn));
       overflow:hidden;
       mix-blend-mode: screen;
     }
     .drop{
       position:absolute;
-      top:-20vh;
+      top:-25vh;
       width: 2px;
       height: 18vh;
-      background: linear-gradient(to bottom, transparent, rgba(200,240,255,.30), transparent);
+      background: linear-gradient(to bottom, transparent, rgba(200,240,255,.32), transparent);
       border-radius: 999px;
-      filter: blur(.1px);
       animation: fall linear infinite;
+      filter: blur(.2px);
     }
     @keyframes fall{
-      to { transform: translateY(140vh); }
+      to { transform: translateY(150vh); }
     }
 
-    /* приложение */
+    /* ===== APP LAYOUT ===== */
     .app{
-      position: relative;
-      z-index: 2;
-      height: 100%;
-      display: grid;
-      grid-template-columns: calc(260px * var(--s)) 1fr;
+      position:relative;
+      z-index:3;
+      height:100%;
+      display:grid;
+      grid-template-columns: calc(270px * var(--s)) 1fr;
       grid-template-rows: 1fr var(--playerH);
       gap: var(--gap);
       padding: var(--pad);
     }
 
-    .cardPanel{
+    .panel{
       background: var(--panel);
       border: 1px solid var(--stroke);
       border-radius: var(--r);
       backdrop-filter: blur(var(--blur));
       -webkit-backdrop-filter: blur(var(--blur));
-      box-shadow: 0 16px 44px rgba(0,0,0,.55);
+      box-shadow: 0 18px 56px rgba(0,0,0,.58);
       overflow:hidden;
     }
 
-    /* sidebar */
+    /* ===== SIDEBAR ===== */
     .sidebar{
-      grid-column:1;
-      grid-row:1;
       padding: calc(14px * var(--s));
       display:flex;
       flex-direction:column;
-      gap: calc(16px * var(--s));
+      gap: calc(14px * var(--s));
     }
     .logo{
       font-weight: 950;
       font-size: calc(18px * var(--s));
-      letter-spacing: .2px;
-      background: linear-gradient(90deg, var(--sun), var(--pink));
+      letter-spacing:.2px;
+      background: linear-gradient(90deg, var(--accent), var(--pink));
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
       user-select:none;
@@ -164,7 +195,7 @@
       justify-content:space-between;
       gap: 10px;
       border: 1px solid transparent;
-      font-weight: 800;
+      font-weight: 850;
       font-size: calc(13px * var(--s));
     }
     .nav button:hover{
@@ -172,10 +203,9 @@
       border-color: rgba(255,255,255,.05);
     }
     .nav button.active{
-      background: linear-gradient(90deg, color-mix(in srgb, var(--sun) 24%, transparent), color-mix(in srgb, var(--pink) 14%, transparent));
-      border-color: color-mix(in srgb, var(--sun) 30%, transparent);
+      background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 24%, transparent), color-mix(in srgb, var(--pink) 14%, transparent));
+      border-color: color-mix(in srgb, var(--accent) 34%, transparent);
     }
-
     .k{
       font-size: calc(11px * var(--s));
       color: rgba(255,255,255,.68);
@@ -188,25 +218,21 @@
 
     .hint{
       margin-top:auto;
-      color: rgba(255,255,255,.70);
-      font-weight: 650;
-      font-size: calc(11px * var(--s));
-      line-height: 1.35;
-      opacity: .9;
       padding: calc(10px * var(--s));
       border-radius: calc(12px * var(--s));
       border: 1px solid rgba(255,255,255,.06);
       background: rgba(255,255,255,.03);
+      color: rgba(255,255,255,.72);
+      font-weight: 650;
+      font-size: calc(11px * var(--s));
+      line-height: 1.35;
     }
 
-    /* main */
+    /* ===== MAIN ===== */
     .main{
-      grid-column:2;
-      grid-row:1;
       display:flex;
       flex-direction:column;
     }
-
     .topbar{
       padding: calc(12px * var(--s));
       border-bottom: 1px solid rgba(255,255,255,.06);
@@ -214,7 +240,6 @@
       gap: calc(10px * var(--s));
       align-items:center;
     }
-
     .search{
       flex:1;
       display:flex;
@@ -232,7 +257,7 @@
       background: transparent;
       color: var(--text);
       font-size: calc(13px * var(--s));
-      font-weight: 700;
+      font-weight: 750;
     }
     .chip{
       border: 1px solid rgba(255,255,255,.10);
@@ -243,6 +268,7 @@
       font-weight: 900;
       font-size: calc(12px * var(--s));
       cursor:pointer;
+      user-select:none;
     }
     .chip:hover{ background: rgba(255,255,255,.07); }
 
@@ -250,14 +276,13 @@
       padding: calc(14px * var(--s));
       overflow:auto;
     }
-
     .hero{
       padding: calc(18px * var(--s));
       border-radius: calc(18px * var(--s));
       border: 1px solid rgba(255,255,255,.08);
       background:
-        radial-gradient(700px 280px at 24% 0%, color-mix(in srgb, var(--sun) 22%, transparent), transparent 60%),
-        radial-gradient(640px 280px at 78% 0%, color-mix(in srgb, var(--sky) 20%, transparent), transparent 65%),
+        radial-gradient(760px 300px at 24% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 62%),
+        radial-gradient(680px 300px at 78% 0%, color-mix(in srgb, var(--sky) 18%, transparent), transparent 66%),
         rgba(255,255,255,.03);
     }
     .hero h1{
@@ -272,9 +297,7 @@
       font-size: calc(12px * var(--s));
     }
 
-    .section{
-      margin-top: calc(16px * var(--s));
-    }
+    .section{ margin-top: calc(16px * var(--s)); }
     .sectionHead{
       display:flex;
       align-items:flex-end;
@@ -287,9 +310,10 @@
       font-size: calc(15px * var(--s));
       font-weight: 950;
     }
+
     .grid{
       display:grid;
-      grid-template-columns: repeat(auto-fill, minmax(calc(160px * var(--s)), 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(calc(170px * var(--s)), 1fr));
       gap: calc(12px * var(--s));
     }
 
@@ -301,6 +325,7 @@
       border-radius: calc(14px * var(--s));
       cursor:pointer;
       transition: .15s ease;
+      user-select:none;
     }
     .card:hover{
       transform: translateY(-2px);
@@ -311,7 +336,7 @@
       width:100%;
       aspect-ratio: 1/1;
       border-radius: calc(12px * var(--s));
-      background: linear-gradient(135deg, var(--sun), var(--pink), var(--sky));
+      background: linear-gradient(135deg, var(--accent), var(--pink), var(--sky));
     }
     .card h3{
       margin: calc(8px * var(--s)) 2px 0;
@@ -332,29 +357,124 @@
       text-overflow:ellipsis;
     }
 
-    .fab{
-      position:absolute;
-      right: calc(12px * var(--s));
-      bottom: calc(58px * var(--s));
-      width: calc(40px * var(--s));
-      height: calc(40px * var(--s));
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 8px 10px;
       border-radius: 999px;
-      border: none;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+      color: rgba(255,255,255,.86);
+      font-weight: 850;
+      font-size: calc(12px * var(--s));
       cursor:pointer;
-      font-weight: 1000;
-      background: var(--sun);
-      color:#111;
-      box-shadow: 0 16px 34px rgba(0,0,0,.45);
-      opacity:0;
-      transform: translateY(10px);
-      transition:.15s ease;
-    }
-    .card:hover .fab{
-      opacity:1;
-      transform: translateY(0);
+      user-select:none;
     }
 
-    /* player */
+    /* ===== EMBED PLAYER (ONE ACTIVE) ===== */
+    .embedBox{
+      margin-top: calc(14px * var(--s));
+      padding: calc(12px * var(--s));
+      border-radius: calc(16px * var(--s));
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+    }
+    .embedBox h3{
+      margin: 0 0 10px 0;
+      font-size: calc(14px * var(--s));
+      font-weight: 950;
+    }
+    .embedGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: calc(12px * var(--s));
+      align-items:start;
+    }
+    .embedList{
+      display:flex;
+      flex-direction:column;
+      gap: calc(10px * var(--s));
+    }
+    .embedItem{
+      padding: calc(10px * var(--s));
+      border-radius: calc(14px * var(--s));
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.14);
+      cursor:pointer;
+      user-select:none;
+    }
+    .embedItem:hover{ background: rgba(255,255,255,.06); }
+    .embedItem.active{
+      border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+      background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent), rgba(255,255,255,.05));
+    }
+    .embedItem .t{
+      font-weight: 950;
+      font-size: calc(13px * var(--s));
+      margin-bottom: 4px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .embedItem .d{
+      color: rgba(255,255,255,.70);
+      font-weight: 650;
+      font-size: calc(11px * var(--s));
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .embedStage{
+      border-radius: calc(14px * var(--s));
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+    .embedStage iframe{
+      width:100%;
+      height: calc(220px * var(--s));
+      border:0;
+      display:block;
+    }
+
+    /* ===== SETTINGS UI ===== */
+    .settingsGrid{
+      margin-top: calc(14px * var(--s));
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: calc(12px * var(--s));
+    }
+    .group{
+      padding: calc(12px * var(--s));
+      border-radius: calc(16px * var(--s));
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+    }
+    .group h3{
+      margin:0 0 10px 0;
+      font-size: calc(14px * var(--s));
+      font-weight: 950;
+    }
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      margin-top: 10px;
+      color: rgba(255,255,255,.86);
+      font-weight: 750;
+      font-size: calc(12px * var(--s));
+    }
+    .row input[type="range"]{ width: 56%; }
+    .row input[type="color"]{
+      width: 46px; height: 34px;
+      border:none; padding:0; background: transparent;
+    }
+    .note{
+      margin-top: 10px;
+      color: rgba(255,255,255,.65);
+      font-size: calc(11px * var(--s));
+      line-height: 1.35;
+    }
+
+    /* ===== PLAYER ===== */
     .player{
       grid-column: 1 / span 2;
       grid-row:2;
@@ -374,28 +494,22 @@
       width: calc(54px * var(--s));
       height: calc(54px * var(--s));
       border-radius: calc(14px * var(--s));
-      background: linear-gradient(135deg, rgba(255,255,255,.08), color-mix(in srgb, var(--sun) 22%, transparent));
+      background: linear-gradient(135deg, rgba(255,255,255,.08), color-mix(in srgb, var(--accent) 22%, transparent));
       border: 1px solid rgba(255,255,255,.10);
       flex:0 0 auto;
     }
-    .meta{
-      min-width:0;
-    }
+    .meta{ min-width:0; }
     .track{
       font-weight: 950;
       font-size: calc(13px * var(--s));
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
     .artist{
       margin-top: 4px;
       font-weight: 700;
       font-size: calc(11px * var(--s));
       color: rgba(255,255,255,.68);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
 
     .center{
@@ -426,8 +540,8 @@
     .btn.play{
       width: calc(42px * var(--s));
       height: calc(42px * var(--s));
-      background: var(--sun);
-      border-color: color-mix(in srgb, var(--sun) 38%, transparent);
+      background: var(--accent);
+      border-color: color-mix(in srgb, var(--accent) 38%, transparent);
       color:#151515;
     }
 
@@ -452,7 +566,7 @@
     .prog > i{
       display:block;
       height:100%;
-      width: 35%;
+      width: 0%;
       background: rgba(255,255,255,.75);
       border-radius: 999px;
     }
@@ -480,114 +594,6 @@
       border-radius: 999px;
     }
 
-    /* settings modal */
-    .modalWrap{
-      position: fixed;
-      inset: 0;
-      z-index: 30;
-      display:none;
-      place-items:center;
-      background: rgba(0,0,0,.45);
-      padding: 18px;
-    }
-    .modal{
-      width: min(720px, 96vw);
-      border-radius: calc(18px * var(--s));
-      background: rgba(17,19,29,.92);
-      border: 1px solid rgba(255,255,255,.10);
-      backdrop-filter: blur(var(--blur));
-      -webkit-backdrop-filter: blur(var(--blur));
-      box-shadow: 0 30px 90px rgba(0,0,0,.65);
-      overflow:hidden;
-    }
-    .modalHead{
-      padding: calc(14px * var(--s)) calc(14px * var(--s));
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 12px;
-    }
-    .modalHead h3{
-      margin:0;
-      font-size: calc(14px * var(--s));
-      font-weight: 950;
-    }
-    .x{
-      border:none;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.10);
-      color: rgba(255,255,255,.92);
-      width: calc(36px * var(--s));
-      height: calc(36px * var(--s));
-      border-radius: 12px;
-      cursor:pointer;
-      font-weight: 950;
-    }
-    .modalBody{
-      padding: calc(14px * var(--s));
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: calc(12px * var(--s));
-    }
-    .group{
-      background: rgba(255,255,255,.03);
-      border: 1px solid rgba(255,255,255,.06);
-      border-radius: calc(14px * var(--s));
-      padding: calc(12px * var(--s));
-    }
-    .group h4{
-      margin:0 0 10px 0;
-      font-size: calc(13px * var(--s));
-      font-weight: 950;
-    }
-    .row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 12px;
-      margin-top: 10px;
-      color: rgba(255,255,255,.86);
-      font-weight: 750;
-      font-size: calc(12px * var(--s));
-    }
-    .row input[type="range"]{ width: 55%; }
-    .row input[type="color"]{
-      width: 46px; height: 34px; border:none; padding:0; background: transparent;
-    }
-    .note{
-      margin-top: 10px;
-      color: rgba(255,255,255,.65);
-      font-size: calc(11px * var(--s));
-      line-height: 1.35;
-    }
-
-    /* embed block */
-    .embedBox{
-      margin-top: calc(14px * var(--s));
-      padding: calc(12px * var(--s));
-      border-radius: calc(16px * var(--s));
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.03);
-    }
-    .embedBox h3{
-      margin: 0 0 10px 0;
-      font-size: calc(14px * var(--s));
-      font-weight: 950;
-    }
-    .embeds{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: calc(12px * var(--s));
-    }
-    iframe{
-      width: 100%;
-      height: calc(152px * var(--s));
-      border: 0;
-      border-radius: calc(14px * var(--s));
-      background: rgba(0,0,0,.2);
-    }
-
     /* scroll */
     .content::-webkit-scrollbar{ width: 10px; }
     .content::-webkit-scrollbar-thumb{
@@ -597,55 +603,56 @@
       background-clip: padding-box;
     }
 
-    /* mobile fallback */
+    /* mobile */
     @media (max-width: 980px){
       body{ overflow:auto; }
       .app{
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr var(--playerH);
       }
-      .sidebar{ grid-column:1; grid-row:1; }
-      .main{ grid-column:1; grid-row:2; }
-      .player{ grid-column:1; grid-row:3; grid-template-columns: 1fr; }
+      .player{
+        grid-template-columns: 1fr;
+      }
       .right{ justify-content:center; }
-      .embeds{ grid-template-columns: 1fr; }
+      .embedGrid{ grid-template-columns: 1fr; }
+      .settingsGrid{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
 
-<body>
+<body data-bg="1">
   <div class="bg"></div>
-  <div class="sunriseOverlay" id="sunriseOverlay"></div>
+  <div class="sunrise"></div>
   <div class="rain" id="rain"></div>
 
   <div class="app">
     <!-- SIDEBAR -->
-    <aside class="cardPanel sidebar" id="sidebar">
+    <aside class="panel sidebar" id="sidebar">
       <div class="logo">Краски Рассвета</div>
 
       <div class="nav" id="nav">
-        <button class="active" data-page="home">🏠 Главная <span class="k">H</span></button>
-        <button data-page="search">🔍 Поиск <span class="k">S</span></button>
-        <button data-page="playlists">🎵 Плейлисты <span class="k">P</span></button>
-        <button data-page="library">📚 Библиотека <span class="k">B</span></button>
-        <button data-page="settings">⚙ Настройки <span class="k">G</span></button>
+        <button class="active" data-page="home">🏠 Главная <span class="k">1</span></button>
+        <button data-page="search">🔍 Поиск <span class="k">2</span></button>
+        <button data-page="playlists">🎵 Плейлисты <span class="k">3</span></button>
+        <button data-page="library">📚 Библиотека <span class="k">4</span></button>
+        <button data-page="settings">⚙ Настройки <span class="k">5</span></button>
       </div>
 
       <div class="hint">
-        Колесо мыши по левой панели: переключает вкладки<br/>
-        Горячие: H/S/P/B/G<br/>
-        Space: play/pause
+        Бинды: 1–5 (вкладки)<br/>
+        Space: play/pause (для встройки — переключение “активного” трека)<br/>
+        Если печатаешь: Alt+1..5
       </div>
     </aside>
 
     <!-- MAIN -->
-    <main class="cardPanel main" id="main">
+    <main class="panel main">
       <div class="topbar">
         <div class="search">
           <span>🔍</span>
-          <input id="searchInput" placeholder="Поиск треков, плейлистов..." autocomplete="off" />
+          <input id="searchInput" placeholder="Поиск (демо)" autocomplete="off" />
         </div>
-        <button class="chip" id="openSettingsBtn">Настройки</button>
+        <div class="chip" id="goSettings">Настройки</div>
       </div>
 
       <div class="content" id="content">
@@ -653,32 +660,27 @@
         <section id="page-home">
           <div class="hero">
             <h1>Добро пожаловать</h1>
-            <p>Музыкальный рассвет. Твоя атмосфера. Управление мышкой и клавиатурой.</p>
+            <p>Это демо-версия “как Spotify”, но с рассветной эстетикой и быстрыми бинд-переключениями.</p>
           </div>
 
           <div class="section">
             <div class="sectionHead">
               <h2>Для тебя</h2>
+              <div class="pill" id="stopAllBtn">⏹ Остановить</div>
             </div>
             <div class="grid" id="homeGrid"></div>
           </div>
 
           <div class="embedBox">
-            <h3>Встроенные треки (Spotify Embed)</h3>
-            <div class="embeds">
-              <!-- можно заменить на свои ссылки -->
-              <iframe
-                src="https://open.spotify.com/embed/track/11dFghVXANMlKmJXsNCbNl"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"></iframe>
-
-              <iframe
-                src="https://open.spotify.com/embed/track/7GhIk7Il098yCjg4BQjzvb"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"></iframe>
+            <h3>Треки на сайте (через встройку). Одновременно играет только один</h3>
+            <div class="embedGrid">
+              <div class="embedList" id="embedList"></div>
+              <div class="embedStage" id="embedStage"></div>
             </div>
+
             <div class="note">
-              Это именно “встройка” Spotify. Полный “свой” стрим из Spotify без embed обычно недоступен из-за ограничений контента/DRM.
+              Добавлять “много песен” реально через embed-ссылки (Spotify/YouTube/SoundCloud). “Вытянуть аудио” из сервисов напрямую обычно нельзя.
+              Дальше, когда подключим Firebase, люди смогут загружать свои mp3/wav и это будет уже настоящий твой плеер.
             </div>
           </div>
         </section>
@@ -687,7 +689,7 @@
         <section id="page-search" style="display:none">
           <div class="hero">
             <h1>Поиск</h1>
-            <p>Нажми S, курсор станет в строку поиска. Пока это демо-фильтр карточек на главной.</p>
+            <p>Это вкладка. Поиск сделаем реальным, когда будет база (Firebase). Пока демо-строка.</p>
           </div>
         </section>
 
@@ -695,7 +697,7 @@
         <section id="page-playlists" style="display:none">
           <div class="hero">
             <h1>Плейлисты</h1>
-            <p>Здесь будут публичные плейлисты и твои. Пока демо.</p>
+            <p>Здесь будет структура как у Spotify: список + треки + фильтры. Пока демо.</p>
           </div>
         </section>
 
@@ -703,125 +705,108 @@
         <section id="page-library" style="display:none">
           <div class="hero">
             <h1>Библиотека</h1>
-            <p>Сохранённое. Пока демо.</p>
+            <p>Сохранённое. Позже добавим лайки/историю/скачанные.</p>
           </div>
         </section>
 
-        <!-- SETTINGS PAGE (optional, also via modal) -->
+        <!-- SETTINGS -->
         <section id="page-settings" style="display:none">
           <div class="hero">
             <h1>Настройки</h1>
-            <p>Открой окно настроек кнопкой или клавишей G.</p>
+            <p>Размер UI, основной цвет, фон, рассвет, дождь.</p>
+          </div>
+
+          <div class="settingsGrid">
+            <div class="group">
+              <h3>Интерфейс</h3>
+
+              <div class="row">
+                <span>Масштаб UI</span>
+                <input id="uiScale" type="range" min="0.80" max="1.60" step="0.01" value="1.05">
+              </div>
+
+              <div class="row">
+                <span>Основной цвет</span>
+                <input id="accent" type="color" value="#ffb347">
+              </div>
+
+              <div class="note">
+                Всё сохраняется в браузере.
+              </div>
+            </div>
+
+            <div class="group">
+              <h3>Эффекты</h3>
+
+              <div class="row">
+                <span>Рассвет (вкл)</span>
+                <input id="sunriseOn" type="range" min="0" max="1" step="1" value="1">
+              </div>
+
+              <div class="row">
+                <span>Сила рассвета</span>
+                <input id="sunrisePower" type="range" min="0" max="1" step="0.01" value="0.70">
+              </div>
+
+              <div class="row">
+                <span>Дождь (вкл)</span>
+                <input id="rainOn" type="range" min="0" max="1" step="1" value="0">
+              </div>
+
+              <div class="row">
+                <span>Капель (кол-во)</span>
+                <input id="rainCount" type="range" min="0" max="120" step="1" value="26">
+              </div>
+
+              <div class="row">
+                <span>Фон (пресет)</span>
+                <input id="bgPreset" type="range" min="1" max="4" step="1" value="1">
+              </div>
+
+              <div class="note">
+                Дождь — чисто визуально, кликам не мешает.
+              </div>
+            </div>
           </div>
         </section>
       </div>
     </main>
 
-    <!-- PLAYER -->
-    <footer class="cardPanel player">
+    <!-- PLAYER (статус активного embed) -->
+    <footer class="panel player">
       <div class="now">
         <div class="art"></div>
         <div class="meta">
-          <div class="track" id="trackName">Neon Sunrise</div>
-          <div class="artist" id="artistName">Demo Artist</div>
+          <div class="track" id="trackName">Нет активного трека</div>
+          <div class="artist" id="artistName">Выбери трек из списка</div>
         </div>
       </div>
 
       <div class="center">
         <div class="ctrls">
-          <button class="btn" id="prevBtn" title="Назад">⏮</button>
-          <button class="btn play" id="playBtn" title="Играть/Пауза">▶</button>
-          <button class="btn" id="nextBtn" title="Вперёд">⏭</button>
+          <button class="btn" id="prevBtn" title="Назад (в списке)">⏮</button>
+          <button class="btn play" id="playBtn" title="Перезапустить активный">▶</button>
+          <button class="btn" id="nextBtn" title="Вперёд (в списке)">⏭</button>
         </div>
         <div class="bar">
-          <span id="tCur">0:42</span>
-          <div class="prog" id="prog">
-            <i id="progFill"></i>
-          </div>
-          <span id="tMax">3:21</span>
+          <span>—</span>
+          <div class="prog"><i id="progFill"></i></div>
+          <span>—</span>
         </div>
       </div>
 
       <div class="right">
-        <button class="btn" id="likeBtn" title="Лайк">♡</button>
-        <div class="vol" id="vol"><i id="volFill"></i></div>
+        <button class="btn" id="stopBtn" title="Остановить">⏹</button>
+        <div class="vol" title="(визуально)"><i id="volFill"></i></div>
       </div>
     </footer>
   </div>
 
-  <!-- SETTINGS MODAL -->
-  <div class="modalWrap" id="modalWrap">
-    <div class="modal">
-      <div class="modalHead">
-        <h3>Настройки интерфейса</h3>
-        <button class="x" id="closeModalBtn">✕</button>
-      </div>
-
-      <div class="modalBody">
-        <div class="group">
-          <h4>Размер и прозрачность</h4>
-
-          <div class="row">
-            <span>Масштаб UI</span>
-            <input id="scaleRange" type="range" min="0.85" max="1.25" step="0.01" value="1">
-          </div>
-
-          <div class="row">
-            <span>Сила рассвета</span>
-            <input id="sunOpacity" type="range" min="0" max="1" step="0.01" value="0.55">
-          </div>
-
-          <div class="note">
-            Масштаб сохраняется в браузере (localStorage).
-          </div>
-        </div>
-
-        <div class="group">
-          <h4>Цвет и эффекты</h4>
-
-          <div class="row">
-            <span>Основной цвет</span>
-            <input id="accentColor" type="color" value="#ffb347" />
-          </div>
-
-          <div class="row">
-            <span>Рассвет</span>
-            <input id="sunriseToggle" type="range" min="0" max="1" step="1" value="1">
-          </div>
-
-          <div class="row">
-            <span>Дождь</span>
-            <input id="rainToggle" type="range" min="0" max="1" step="1" value="0">
-          </div>
-
-          <div class="row">
-            <span>Интенсивность дождя</span>
-            <input id="rainIntensity" type="range" min="0" max="80" step="1" value="22">
-          </div>
-
-          <div class="note">
-            Дождь — это визуальный слой, не мешает кликам.
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script>
-    // ====== DEMO DATA ======
-    const demoPlaylists = [
-      { title: "Sunrise Chill", desc: "Плейлист" },
-      { title: "Morning Energy", desc: "Плейлист" },
-      { title: "Golden Hour", desc: "Плейлист" },
-      { title: "Night Ride", desc: "Плейлист" },
-      { title: "Soft Pop", desc: "Плейлист" },
-      { title: "Dream Flow", desc: "Плейлист" },
-    ];
-
-    // ====== HELPERS ======
     const $ = (s) => document.querySelector(s);
     const root = document.documentElement;
 
+    // ===== NAV + PAGES =====
     const pages = ["home","search","playlists","library","settings"];
     let pageIndex = 0;
 
@@ -831,7 +816,7 @@
       });
     }
 
-    function openPage(name, opts = { focusSearch:false }){
+    function openPage(name){
       pages.forEach(p=>{
         const el = document.getElementById("page-"+p);
         if(el) el.style.display = (p === name) ? "block" : "none";
@@ -839,99 +824,57 @@
       pageIndex = Math.max(0, pages.indexOf(name));
       setActiveNav(name);
 
-      // удобство: при переходе в search — фокус в инпут
-      if(name === "search" || opts.focusSearch){
+      if(name === "search"){
         $("#searchInput")?.focus();
       }
     }
 
-    // ====== FIX: клики по меню ======
+    // клики по меню
     document.querySelectorAll("#nav button[data-page]").forEach(btn=>{
-      btn.addEventListener("click", () => {
-        const name = btn.dataset.page;
-        if(name === "settings"){
-          openSettings();
-          openPage("settings");
-          return;
-        }
-        openPage(name);
-      });
+      btn.addEventListener("click", () => openPage(btn.dataset.page));
     });
 
-    // ====== колесо мыши по sidebar: переключение вкладок ======
-    const sidebar = $("#sidebar");
-    let wheelLock = 0;
-    sidebar.addEventListener("wheel", (e) => {
-      // если скроллишь на трекпаде, не делаем бешеную прокрутку вкладок
-      const now = Date.now();
-      if(now - wheelLock < 260) return;
-      wheelLock = now;
+    // кнопка в топбаре
+    $("#goSettings").addEventListener("click", () => openPage("settings"));
 
-      const dir = (e.deltaY > 0) ? 1 : -1;
-      pageIndex = (pageIndex + dir + pages.length) % pages.length;
-
-      const name = pages[pageIndex];
-      if(name === "settings"){
-        openSettings();
-      } else {
-        closeSettings();
-      }
-      openPage(name, { focusSearch: name === "search" });
-      e.preventDefault();
-    }, { passive: false });
-
-    // ====== HOTKEYS ======
+    // бинды 1-5
     document.addEventListener("keydown", (e) => {
       const tag = (document.activeElement?.tagName || "").toLowerCase();
       const typing = tag === "input" || tag === "textarea" || document.activeElement?.isContentEditable;
 
-      const k = e.key.toLowerCase();
+      const allow = !typing || e.altKey; // если печатаешь — Alt+1..5
+      if(!allow) return;
 
-      // хоткеи вкладок: работают если НЕ печатаешь
-      // если печатаешь — можно Alt+H/S/P/B/G
-      const allow = !typing || e.altKey;
-
-      if(allow){
-        if(k === "h") { closeSettings(); openPage("home"); }
-        if(k === "s") { closeSettings(); openPage("search", { focusSearch:true }); }
-        if(k === "p") { closeSettings(); openPage("playlists"); }
-        if(k === "b") { closeSettings(); openPage("library"); }
-        if(k === "g") { openSettings(); openPage("settings"); }
-      }
-
-      // space play/pause — только если не печатаешь
-      if(!typing && k === " "){
-        e.preventDefault();
-        togglePlay();
-      }
-
-      // esc закрывает настройки
-      if(k === "escape"){
-        closeSettings();
-      }
+      const k = e.key;
+      if(k === "1") openPage("home");
+      if(k === "2") openPage("search");
+      if(k === "3") openPage("playlists");
+      if(k === "4") openPage("library");
+      if(k === "5") openPage("settings");
     });
 
-    // ====== HOME CARDS ======
-    const grid = $("#homeGrid");
+    // ===== CARDS =====
+    const demoPlaylists = [
+      { title: "Sunrise Chill", desc: "Плейлист" },
+      { title: "Morning Energy", desc: "Плейлист" },
+      { title: "Golden Hour", desc: "Плейлист" },
+      { title: "Night Ride", desc: "Плейлист" },
+      { title: "Soft Pop", desc: "Плейлист" },
+      { title: "Dream Flow", desc: "Плейлист" },
+      { title: "Warm Sky", desc: "Подборка" },
+      { title: "After Rain", desc: "Подборка" }
+    ];
+
+    const homeGrid = $("#homeGrid");
     demoPlaylists.forEach(item=>{
       const card = document.createElement("div");
       card.className = "card";
       card.innerHTML = `
         <div class="cover"></div>
-        <button class="fab" title="Играть">▶</button>
         <h3>${escapeHtml(item.title)}</h3>
         <span>${escapeHtml(item.desc)}</span>
       `;
-      card.addEventListener("click", (e) => {
-        if(e.target.closest(".fab")){
-          setNowPlaying(item.title, "Demo Artist");
-          setPlaying(true);
-          return;
-        }
-        // демо: открыть плейлист
-        setNowPlaying(item.title, "Playlist");
-      });
-      grid.appendChild(card);
+      homeGrid.appendChild(card);
     });
 
     function escapeHtml(s){
@@ -943,39 +886,257 @@
         .replaceAll("'","&#039;");
     }
 
-    // ====== PLAYER DEMO ======
-    const playBtn = $("#playBtn");
-    let playing = false;
+    // ===== EMBED PLAYER: ONLY ONE ACTIVE =====
+    // Можешь сюда добавлять сколько хочешь embed-источников.
+    // Spotify: https://open.spotify.com/embed/track/...
+    // YouTube: https://www.youtube.com/embed/VIDEO_ID
+    // SoundCloud: обычно нужен спец embed url (они дают код).
+    const embedItems = [
+      {
+        title: "Daft Punk — Harder, Better, Faster, Stronger",
+        source: "Spotify Embed",
+        url: "https://open.spotify.com/embed/track/5W3cjX2J3tjhG8zb6u0qHn"
+      },
+      {
+        title: "Radiohead — Creep",
+        source: "Spotify Embed",
+        url: "https://open.spotify.com/embed/track/70LcF31zb1H0PyJoS1Sx1r"
+      },
+      {
+        title: "Rick Astley — Never Gonna Give You Up",
+        source: "YouTube Embed",
+        url: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+      },
+      {
+        title: "Coldplay — Viva La Vida",
+        source: "YouTube Embed",
+        url: "https://www.youtube.com/embed/dvgZkm1xWPE"
+      }
+    ];
 
-    function setNowPlaying(track, artist){
-      $("#trackName").textContent = track;
-      $("#artistName").textContent = artist;
+    const embedList = $("#embedList");
+    const embedStage = $("#embedStage");
+
+    let activeEmbedIndex = -1;
+
+    function renderEmbedList(){
+      embedList.innerHTML = "";
+      embedItems.forEach((it, idx) => {
+        const el = document.createElement("div");
+        el.className = "embedItem" + (idx === activeEmbedIndex ? " active" : "");
+        el.innerHTML = `
+          <div class="t">${escapeHtml(it.title)}</div>
+          <div class="d">${escapeHtml(it.source)}</div>
+        `;
+        el.addEventListener("click", () => setActiveEmbed(idx, true));
+        embedList.appendChild(el);
+      });
     }
 
-    function setPlaying(state){
-      playing = state;
-      playBtn.textContent = playing ? "⏸" : "▶";
+    // ВАЖНО: чтобы старый трек точно прекращался,
+    // мы НЕ меняем src у того же iframe, а ПЕРЕСОЗДАЁМ iframe узел.
+    function setActiveEmbed(idx, userAction){
+      if(idx < 0 || idx >= embedItems.length) return;
+      activeEmbedIndex = idx;
+
+      // обновить список (подсветка)
+      renderEmbedList();
+
+      // убить старый плеер
+      embedStage.innerHTML = "";
+
+      // создать новый iframe
+      const it = embedItems[idx];
+      const iframe = document.createElement("iframe");
+      iframe.setAttribute("allow", "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture");
+      iframe.setAttribute("loading", "lazy");
+      iframe.src = it.url;
+
+      embedStage.appendChild(iframe);
+
+      // обновить нижний бар
+      $("#trackName").textContent = it.title;
+      $("#artistName").textContent = it.source;
+
+      // визуальная “полоса”
+      $("#progFill").style.width = userAction ? "12%" : "0%";
     }
 
-    function togglePlay(){
-      setPlaying(!playing);
+    function stopEmbed(){
+      // “стоп” = снести iframe
+      embedStage.innerHTML = "";
+      activeEmbedIndex = -1;
+      renderEmbedList();
+      $("#trackName").textContent = "Остановлено";
+      $("#artistName").textContent = "Выбери трек из списка";
+      $("#progFill").style.width = "0%";
     }
 
-    playBtn.addEventListener("click", togglePlay);
-    $("#prevBtn").addEventListener("click", () => setNowPlaying("Previous (demo)", "Demo Artist"));
-    $("#nextBtn").addEventListener("click", () => setNowPlaying("Next (demo)", "Demo Artist"));
-
-    // прогресс (визуально)
-    const prog = $("#prog");
-    const progFill = $("#progFill");
-    prog.addEventListener("click", (e) => {
-      const r = prog.getBoundingClientRect();
-      const pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
-      progFill.style.width = Math.round(pct * 100) + "%";
+    // кнопки управления списком
+    $("#prevBtn").addEventListener("click", () => {
+      if(embedItems.length === 0) return;
+      const next = (activeEmbedIndex <= 0) ? (embedItems.length - 1) : (activeEmbedIndex - 1);
+      setActiveEmbed(next, true);
     });
 
-    // громкость (визуально)
-    const vol = $("#vol");
+    $("#nextBtn").addEventListener("click", () => {
+      if(embedItems.length === 0) return;
+      const next = (activeEmbedIndex < 0) ? 0 : ((activeEmbedIndex + 1) % embedItems.length);
+      setActiveEmbed(next, true);
+    });
+
+    $("#playBtn").addEventListener("click", () => {
+      // для embed нет “play/pause” напрямую без API.
+      // делаем “перезапустить активный”: пересоздаём iframe
+      if(activeEmbedIndex < 0) {
+        setActiveEmbed(0, true);
+        return;
+      }
+      setActiveEmbed(activeEmbedIndex, true);
+    });
+
+    $("#stopBtn").addEventListener("click", stopEmbed);
+    $("#stopAllBtn").addEventListener("click", stopEmbed);
+
+    // Space: перезапуск/стоп (чтобы было удобно)
+    document.addEventListener("keydown", (e) => {
+      const tag = (document.activeElement?.tagName || "").toLowerCase();
+      const typing = tag === "input" || tag === "textarea" || document.activeElement?.isContentEditable;
+      if(typing) return;
+
+      if(e.key === " "){
+        e.preventDefault();
+        if(activeEmbedIndex >= 0) stopEmbed();
+        else setActiveEmbed(0, true);
+      }
+    });
+
+    // ===== SETTINGS (persist) =====
+    function loadSetting(key, fallback){
+      const v = localStorage.getItem(key);
+      return (v === null || v === undefined) ? fallback : v;
+    }
+    function saveSetting(key, v){
+      localStorage.setItem(key, String(v));
+    }
+
+    // UI scale
+    const uiScale = $("#uiScale");
+    const savedScale = loadSetting("krs_uiScale", String(getComputedStyle(root).getPropertyValue("--s").trim()));
+    root.style.setProperty("--s", savedScale);
+    uiScale.value = savedScale;
+    uiScale.addEventListener("input", () => {
+      root.style.setProperty("--s", uiScale.value);
+      saveSetting("krs_uiScale", uiScale.value);
+    });
+
+    // Accent
+    const accent = $("#accent");
+    const savedAccent = loadSetting("krs_accent", getComputedStyle(root).getPropertyValue("--accent").trim() || "#ffb347");
+    root.style.setProperty("--accent", savedAccent);
+    accent.value = savedAccent;
+    accent.addEventListener("input", () => {
+      root.style.setProperty("--accent", accent.value);
+      saveSetting("krs_accent", accent.value);
+    });
+
+    // Sunrise
+    const sunriseOn = $("#sunriseOn");
+    const sunrisePower = $("#sunrisePower");
+
+    const savedSunOn = loadSetting("krs_sunriseOn", String(getComputedStyle(root).getPropertyValue("--sunriseOn").trim()));
+    const savedSunPow = loadSetting("krs_sunrisePower", String(getComputedStyle(root).getPropertyValue("--sunrisePower").trim()));
+
+    root.style.setProperty("--sunriseOn", savedSunOn);
+    root.style.setProperty("--sunrisePower", savedSunPow);
+
+    sunriseOn.value = savedSunOn;
+    sunrisePower.value = savedSunPow;
+
+    sunriseOn.addEventListener("input", () => {
+      root.style.setProperty("--sunriseOn", sunriseOn.value);
+      saveSetting("krs_sunriseOn", sunriseOn.value);
+    });
+    sunrisePower.addEventListener("input", () => {
+      root.style.setProperty("--sunrisePower", sunrisePower.value);
+      saveSetting("krs_sunrisePower", sunrisePower.value);
+    });
+
+    // Background preset
+    const bgPreset = $("#bgPreset");
+    const savedBg = loadSetting("krs_bgPreset", document.body.getAttribute("data-bg") || "1");
+    document.body.setAttribute("data-bg", savedBg);
+    bgPreset.value = savedBg;
+    bgPreset.addEventListener("input", () => {
+      document.body.setAttribute("data-bg", bgPreset.value);
+      saveSetting("krs_bgPreset", bgPreset.value);
+    });
+
+    // Rain
+    const rainOn = $("#rainOn");
+    const rainCount = $("#rainCount");
+    const rainLayer = $("#rain");
+
+    const savedRainOn = loadSetting("krs_rainOn", String(getComputedStyle(root).getPropertyValue("--rainOn").trim()));
+    const savedRainCount = loadSetting("krs_rainCount", String(getComputedStyle(root).getPropertyValue("--rainCount").trim()));
+
+    root.style.setProperty("--rainOn", savedRainOn);
+    root.style.setProperty("--rainCount", savedRainCount);
+
+    rainOn.value = savedRainOn;
+    rainCount.value = savedRainCount;
+
+    let rainNodes = [];
+    function rebuildRain(){
+      // снести старые
+      rainNodes.forEach(n => n.remove());
+      rainNodes = [];
+
+      const on = Number(getComputedStyle(root).getPropertyValue("--rainOn").trim()) === 1;
+      const count = Number(getComputedStyle(root).getPropertyValue("--rainCount").trim()) || 0;
+      if(!on || count <= 0) return;
+
+      const w = window.innerWidth;
+
+      for(let i=0; i<count; i++){
+        const d = document.createElement("div");
+        d.className = "drop";
+
+        const left = Math.random() * w;
+        const dur = 0.65 + Math.random() * 1.05;  // 0.65..1.70
+        const delay = Math.random() * 1.3;
+        const opacity = 0.10 + Math.random() * 0.26;
+
+        d.style.left = left + "px";
+        d.style.animationDuration = dur + "s";
+        d.style.animationDelay = delay + "s";
+        d.style.opacity = opacity;
+
+        // чуть разная ширина, чтобы выглядело живее
+        const ww = 1 + Math.random() * 1.6;
+        d.style.width = ww + "px";
+
+        rainLayer.appendChild(d);
+        rainNodes.push(d);
+      }
+    }
+
+    rainOn.addEventListener("input", () => {
+      root.style.setProperty("--rainOn", rainOn.value);
+      saveSetting("krs_rainOn", rainOn.value);
+      rebuildRain();
+    });
+
+    rainCount.addEventListener("input", () => {
+      root.style.setProperty("--rainCount", rainCount.value);
+      saveSetting("krs_rainCount", rainCount.value);
+      rebuildRain();
+    });
+
+    window.addEventListener("resize", rebuildRain);
+
+    // визуальная громкость (не влияет на embed)
+    const vol = document.querySelector(".vol");
     const volFill = $("#volFill");
     vol.addEventListener("click", (e) => {
       const r = vol.getBoundingClientRect();
@@ -983,145 +1144,9 @@
       volFill.style.width = Math.round(pct * 100) + "%";
     });
 
-    // ====== SETTINGS: modal + persistence ======
-    const modalWrap = $("#modalWrap");
-    const openSettingsBtn = $("#openSettingsBtn");
-    const closeModalBtn = $("#closeModalBtn");
-
-    function openSettings(){
-      modalWrap.style.display = "grid";
-    }
-    function closeSettings(){
-      modalWrap.style.display = "none";
-    }
-
-    openSettingsBtn.addEventListener("click", () => {
-      openSettings();
-      openPage("settings");
-    });
-    closeModalBtn.addEventListener("click", closeSettings);
-    modalWrap.addEventListener("click", (e) => {
-      if(e.target === modalWrap) closeSettings();
-    });
-
-    // UI scale
-    const scaleRange = $("#scaleRange");
-    const savedScale = localStorage.getItem("krs_uiScale");
-    if(savedScale){
-      root.style.setProperty("--s", savedScale);
-      scaleRange.value = savedScale;
-    }
-    scaleRange.addEventListener("input", () => {
-      root.style.setProperty("--s", scaleRange.value);
-      localStorage.setItem("krs_uiScale", scaleRange.value);
-    });
-
-    // Accent
-    const accentColor = $("#accentColor");
-    const savedAccent = localStorage.getItem("krs_accent");
-    if(savedAccent){
-      root.style.setProperty("--sun", savedAccent);
-      accentColor.value = savedAccent;
-    }
-    accentColor.addEventListener("input", () => {
-      root.style.setProperty("--sun", accentColor.value);
-      localStorage.setItem("krs_accent", accentColor.value);
-    });
-
-    // Sunrise opacity + toggle
-    const sunOpacity = $("#sunOpacity");
-    const sunriseToggle = $("#sunriseToggle");
-    const savedSunOp = localStorage.getItem("krs_sunOp");
-    const savedSunOn = localStorage.getItem("krs_sunOn");
-
-    if(savedSunOp){
-      root.style.setProperty("--sunriseOpacity", savedSunOp);
-      sunOpacity.value = savedSunOp;
-    }
-    if(savedSunOn !== null){
-      root.style.setProperty("--sunriseOn", savedSunOn);
-      sunriseToggle.value = savedSunOn;
-    }
-
-    sunOpacity.addEventListener("input", () => {
-      root.style.setProperty("--sunriseOpacity", sunOpacity.value);
-      localStorage.setItem("krs_sunOp", sunOpacity.value);
-    });
-    sunriseToggle.addEventListener("input", () => {
-      root.style.setProperty("--sunriseOn", sunriseToggle.value);
-      localStorage.setItem("krs_sunOn", sunriseToggle.value);
-    });
-
-    // Rain toggle + intensity
-    const rainToggle = $("#rainToggle");
-    const rainIntensity = $("#rainIntensity");
-
-    const savedRainOn = localStorage.getItem("krs_rainOn");
-    const savedRainInt = localStorage.getItem("krs_rainInt");
-
-    if(savedRainOn !== null){
-      root.style.setProperty("--rainOn", savedRainOn);
-      rainToggle.value = savedRainOn;
-    }
-    if(savedRainInt !== null){
-      root.style.setProperty("--rainIntensity", savedRainInt);
-      rainIntensity.value = savedRainInt;
-    }
-
-    function setRain(on){
-      root.style.setProperty("--rainOn", on ? 1 : 0);
-      localStorage.setItem("krs_rainOn", on ? 1 : 0);
-      rebuildRain();
-    }
-
-    function setRainIntensity(v){
-      root.style.setProperty("--rainIntensity", v);
-      localStorage.setItem("krs_rainInt", v);
-      rebuildRain();
-    }
-
-    rainToggle.addEventListener("input", () => setRain(rainToggle.value === "1"));
-    rainIntensity.addEventListener("input", () => setRainIntensity(rainIntensity.value));
-
-    // ====== Rain generator ======
-    const rain = $("#rain");
-    let rainNodes = [];
-
-    function rebuildRain(){
-      // очистить старые
-      rainNodes.forEach(n => n.remove());
-      rainNodes = [];
-
-      const on = Number(getComputedStyle(root).getPropertyValue("--rainOn").trim()) === 1;
-      const count = Number(getComputedStyle(root).getPropertyValue("--rainIntensity").trim()) || 0;
-      if(!on || count <= 0) return;
-
-      const w = window.innerWidth;
-      for(let i=0;i<count;i++){
-        const d = document.createElement("div");
-        d.className = "drop";
-
-        const left = Math.random() * w;
-        const dur = 0.65 + Math.random() * 0.9; // 0.65..1.55
-        const delay = Math.random() * 1.2;
-        const opacity = 0.12 + Math.random() * 0.22;
-
-        d.style.left = left + "px";
-        d.style.animationDuration = dur + "s";
-        d.style.animationDelay = delay + "s";
-        d.style.opacity = opacity;
-
-        rain.appendChild(d);
-        rainNodes.push(d);
-      }
-    }
-
-    window.addEventListener("resize", () => rebuildRain());
-
-    // старт
+    // ===== START =====
     openPage("home");
-    setNowPlaying("Neon Sunrise", "Demo Artist");
-    setPlaying(false);
+    renderEmbedList();
     rebuildRain();
   </script>
 </body>
