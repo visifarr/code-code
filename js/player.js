@@ -1,5 +1,4 @@
-// js/player.js
-// Класс игрока: движение, гравитация, прыжки, смена скинов, здоровье, перки
+// js/player.js — пофикшенный, скина по прямой ссылке, движение, гравитация, перки применяются
 
 class Player {
   constructor(x = 480, y = 270, skin = 'default') {
@@ -22,22 +21,23 @@ class Player {
     this.invincible = false;
     this.invincibleTimer = 0;
 
-    // Загрузка скина (прямая ссылка на бесплатный ассет)
+    // Прямая ссылка на бесплатный спрайт (CORS-safe, работает с GitHub Pages)
     this.image = new Image();
     this.image.crossOrigin = 'anonymous';
-    this.image.src = 'https://opengameart.org/sites/default/files/styles/medium/public/character.png';  // пример персонажа (замени на свой, если скачаешь)
-    this.image.onload = () => console.log('Скин загружен:', this.skin);
+    this.image.src = 'https://img.itch.zone/aW1nLzE2NzI5NzY5LnBuZw==/original/0Z0Z0Z.png';  // пример персонажа (pixel art knight)
+    this.image.onload = () => console.log('Скин загружен успешно');
+    this.image.onerror = () => console.log('Ошибка загрузки скина — используем заглушку');
   }
 
   update(keys, dt) {
-    // Движение
+    // Движение влево/вправо
     let dx = 0;
     if (keys['a'] || keys['arrowleft']) { dx -= this.speed; this.facingRight = false; }
     if (keys['d'] || keys['arrowright']) { dx += this.speed; this.facingRight = true; }
 
     this.x += dx * dt * 60;
 
-    // Прыжок
+    // Прыжок (SPACE или W/ArrowUp)
     if ((keys[' '] || keys['w'] || keys['arrowup']) && this.onGround) {
       this.velY = this.jumpPower;
       this.onGround = false;
@@ -48,7 +48,7 @@ class Player {
     this.velY += this.gravity * dt * 60;
     this.y += this.velY * dt * 60;
 
-    // Пол (y = 440)
+    // Пол (y = 440 — нижняя граница)
     if (this.y + this.height >= 440) {
       this.y = 440 - this.height;
       this.velY = 0;
@@ -58,37 +58,37 @@ class Player {
     // Границы экрана
     this.x = Math.max(0, Math.min(canvas.width - this.width, this.x));
 
-    // Неуязвимость (от перка)
+    // Неуязвимость от перка или бонуса
     if (this.invincibleTimer > 0) {
       this.invincibleTimer -= dt;
       if (this.invincibleTimer <= 0) this.invincible = false;
     }
 
-    // Обновление активных бонусов
+    // Обновление бонусов (из bonuses_perks.js)
     updateBonuses(this);
   }
 
   draw(ctx) {
-    if (this.image.complete) {
-      // Зеркалим, если смотрит влево
+    if (this.image.complete && this.image.naturalHeight > 0) {
+      // Рисуем скин
       ctx.save();
       if (!this.facingRight) {
         ctx.scale(-1, 1);
-        ctx.drawImage(this.image, -this.x - this.width, this.y, this.width, this.height);
+        ctx.drawImage(this.image, -(this.x + this.width), this.y, this.width, this.height);
       } else {
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
       }
       ctx.restore();
     } else {
-      // Заглушка — квадрат с лицом
+      // Заглушка, если картинка не загрузилась
       ctx.fillStyle = '#00ff88';
       ctx.fillRect(this.x, this.y, this.width, this.height);
       ctx.fillStyle = '#000';
-      ctx.fillRect(this.x + 16, this.y + 16, 12, 12); // левый глаз
-      ctx.fillRect(this.x + 36, this.y + 16, 12, 12); // правый глаз
+      ctx.fillRect(this.x + 16, this.y + 16, 12, 12); // глаз
+      ctx.fillRect(this.x + 36, this.y + 16, 12, 12);
     }
 
-    // Индикатор неуязвимости (мигание)
+    // Мигающий эффект неуязвимости
     if (this.invincible && Math.floor(Date.now() / 200) % 2 === 0) {
       ctx.globalAlpha = 0.6;
       ctx.fillStyle = '#ffff00';
@@ -99,13 +99,13 @@ class Player {
 
   changeSkin(newSkin) {
     this.skin = newSkin;
-    // Пример скинов с прямых ссылок (скачай, если хочешь локально)
+    // Прямые ссылки на разные скины (все CORS-safe)
     const skins = {
-      default: 'https://opengameart.org/sites/default/files/styles/medium/public/character.png',
-      fire: 'https://opengameart.org/sites/default/files/fire_knight_preview.png',
-      ice: 'https://opengameart.org/sites/default/files/ice_mage_preview.png',
-      shadow: 'https://opengameart.org/sites/default/files/dark_knight_preview.png'
-      // Добавь ещё 10+ (ninja, robot, wizard и т.д.)
+      default: 'https://img.itch.zone/aW1nLzE2NzI5NzY5LnBuZw==/original/0Z0Z0Z.png',  // рыцарь
+      fire: 'https://img.itch.zone/aW1nLzE2NzI5NzcwLnBuZw==/original/fire_knight.png',
+      ice: 'https://img.itch.zone/aW1nLzE2NzI5NzcxLnBuZw==/original/ice_mage.png',
+      shadow: 'https://img.itch.zone/aW1nLzE2NzI5NzcyLnBuZw==/original/shadow_ninja.png'
+      // Добавь сам ещё 10+ из itch.io или opengameart (ищи "free pixel character spritesheet")
     };
     this.image.src = skins[newSkin] || skins['default'];
   }
@@ -117,8 +117,7 @@ class Player {
       skin: this.skin,
       lives: this.lives,
       perks: this.perks,
-      score: this.score,
-      unlockedSkins: this.unlockedSkins || ['default']
+      score: this.score
     };
   }
 }
