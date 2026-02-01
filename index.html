@@ -1,10 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <title>Моя игра</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Твоя Игра — Эпичное Приключение</title>
+  <style>
+    body { margin:0; background:#0a0015; font-family:Arial,Helvetica,sans-serif; color:#e0e0ff; overflow:hidden; }
+    canvas { display:block; margin:0 auto; image-rendering:pixelated; background:#000; border:2px solid #444; }
+    #ui { position:absolute; top:10px; left:10px; pointer-events:none; z-index:10; }
+    #dialog { position:absolute; bottom:20px; left:10%; width:80%; background:rgba(0,0,0,0.7); padding:15px; border-radius:12px; font-size:18px; text-align:center; display:none; }
+  </style>
 </head>
 <body>
-  <h1>Привет! Игра загружается...</h1>
-  <p>Если видишь это — GitHub Pages работает.</p>
+  <canvas id="c" width="960" height="540"></canvas>
+  <div id="ui"></div>
+  <div id="dialog"></div>
+
+  <!-- Скрипты подключаем по одному, но пока оставляем все -->
+  <script src="js/registration.js"></script>
+  <script src="js/saving.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/bonuses_perks.js"></script>
+  <script src="js/storyline.js"></script>
+  <script src="js/game_modes.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/unique_systems.js"></script>
+  <script src="js/enemies.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>
