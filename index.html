@@ -1,2473 +1,319 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Краски Рассвета — новый дизайн</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Music Hub • Локальный + Spotify</title>
   <style>
-    :root{
-      /* ====== BIG UI by default (x2–x3 feeling) ====== */
-      --ui: 2.10;
-      --accent: #ffb347;
-
-      /* background presets 1..12 */
-      --bgPreset: 3;
-
-      /* glass + depth */
-      --glass: .58;
-      --stroke: rgba(255,255,255,.13);
-      --shadow: 0 30px 120px rgba(0,0,0,.70);
-
-      /* sunrise + rain */
-      --sunOn: 1;
-      --sunPower: .90;
-      --rainOn: 1;
-      --rainCount: 120;
-      --rainSize: 1.15;
-      --rainSpeed: 1.00;
-
-      /* motion */
-      --motion: 1; /* 0/1 */
-
-      /* base */
-      --bg0: #060815;
-      --text: rgba(255,255,255,.94);
-      --muted: rgba(255,255,255,.72);
-
-      /* sizing */
-      --pad: calc(18px * var(--ui));
-      --gap: calc(16px * var(--ui));
-      --r1:  calc(26px * var(--ui));
-      --r2:  calc(18px * var(--ui));
-      --r3:  calc(14px * var(--ui));
-      --blur: 18px;
-
-      --fs0: calc(12px * var(--ui));
-      --fs1: calc(14px * var(--ui));
-      --fs2: calc(16px * var(--ui));
-      --fs3: calc(20px * var(--ui));
-      --fs4: calc(28px * var(--ui));
-      --fs5: calc(40px * var(--ui));
-
-      /* layout */
-      --topH:    calc(86px * var(--ui));
-      --dockH:   calc(92px * var(--ui));
-      --playerH: calc(156px * var(--ui));
-      --leftW:   calc(400px * var(--ui));
-      --rightW:  calc(420px * var(--ui));
+    :root {
+      --bg: #121212;
+      --card: #181818;
+      --text: #ffffff;
+      --accent: #1db954;
+      --gray: #b3b3b3;
     }
-
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--bg);
       color: var(--text);
-      background: var(--bg0);
-      overflow:hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      min-height: 100vh;
+      padding-bottom: 120px;
+    }
+    header {
+      background: #000;
+      padding: 1.5rem;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+    h1 { color: var(--accent); font-size: 2.8rem; margin-bottom: 0.4rem; }
+    .subtitle { color: var(--gray); }
+
+    .section {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    h2 {
+      color: white;
+      margin: 1.5rem 0 1rem;
+      font-size: 1.8rem;
+      border-left: 5px solid var(--accent);
+      padding-left: 1rem;
     }
 
-    /* ===== BACKGROUND (12 presets) ===== */
-    .bg{ position:fixed; inset:0; z-index:0; background: var(--bg0); }
-    .bg::before{
-      content:"";
-      position:absolute; inset:-12%;
-      opacity:1;
-      filter: saturate(1.18) contrast(1.08);
-      background:
-        radial-gradient(1200px 760px at 14% -10%, rgba(255,179,71,.30), transparent 64%),
-        radial-gradient(1100px 720px at 86% 0%, rgba(255,111,174,.22), transparent 66%),
-        radial-gradient(1100px 820px at 55% 120%, rgba(110,203,255,.20), transparent 72%),
-        radial-gradient(900px 560px at 20% 65%, rgba(255,255,255,.03), transparent 74%),
-        var(--bg0);
-      transform: translateZ(0);
+    /* Spotify embeds */
+    .embed-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .embed-card {
+      background: var(--card);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
     }
 
-    body[data-bg="1"] .bg::before{ background:
-      radial-gradient(1400px 900px at 18% -14%, rgba(255,179,71,.34), transparent 66%),
-      radial-gradient(1200px 820px at 88% 2%, rgba(255,111,174,.24), transparent 70%),
-      radial-gradient(1200px 920px at 52% 118%, rgba(110,203,255,.18), transparent 78%),
-      radial-gradient(900px 560px at 32% 60%, rgba(255,255,255,.03), transparent 78%),
-      #050716;
-    }
-    body[data-bg="2"] .bg::before{ background:
-      radial-gradient(1500px 980px at 10% 0%, rgba(255,111,174,.30), transparent 68%),
-      radial-gradient(1300px 900px at 92% 6%, rgba(110,203,255,.22), transparent 74%),
-      radial-gradient(1300px 980px at 55% 122%, rgba(255,179,71,.16), transparent 80%),
-      radial-gradient(900px 560px at 44% 56%, rgba(255,255,255,.03), transparent 80%),
-      #050716;
-    }
-    body[data-bg="3"] .bg::before{ background:
-      radial-gradient(1600px 1000px at 22% -10%, rgba(110,203,255,.26), transparent 70%),
-      radial-gradient(1400px 940px at 88% 4%, rgba(255,179,71,.20), transparent 78%),
-      radial-gradient(1300px 980px at 52% 124%, rgba(255,111,174,.14), transparent 82%),
-      radial-gradient(900px 560px at 34% 60%, rgba(255,255,255,.03), transparent 82%),
-      #050716;
-    }
-    body[data-bg="4"] .bg::before{ background:
-      radial-gradient(1600px 1000px at 18% -12%, rgba(255,179,71,.20), transparent 76%),
-      radial-gradient(1400px 940px at 88% 0%, rgba(110,203,255,.18), transparent 80%),
-      radial-gradient(1300px 980px at 55% 124%, rgba(255,111,174,.12), transparent 84%),
-      radial-gradient(900px 560px at 36% 62%, rgba(255,255,255,.03), transparent 82%),
-      #050716;
-    }
-    body[data-bg="5"] .bg::before{ background:
-      radial-gradient(1700px 1100px at 20% -14%, rgba(255,111,174,.18), transparent 78%),
-      radial-gradient(1500px 980px at 88% 2%, rgba(255,179,71,.16), transparent 82%),
-      radial-gradient(1300px 980px at 55% 124%, rgba(110,203,255,.12), transparent 86%),
-      radial-gradient(900px 560px at 30% 60%, rgba(255,255,255,.03), transparent 84%),
-      #050716;
-    }
-    body[data-bg="6"] .bg::before{ background:
-      radial-gradient(1700px 1100px at 20% -14%, rgba(255,179,71,.16), transparent 78%),
-      radial-gradient(1500px 980px at 88% 2%, rgba(110,203,255,.16), transparent 82%),
-      radial-gradient(1300px 980px at 55% 124%, rgba(255,111,174,.12), transparent 86%),
-      radial-gradient(900px 560px at 40% 60%, rgba(255,255,255,.03), transparent 84%),
-      #040615;
-    }
-    body[data-bg="7"] .bg::before{ background:
-      radial-gradient(1800px 1200px at 18% -12%, rgba(110,203,255,.16), transparent 80%),
-      radial-gradient(1500px 980px at 90% 2%, rgba(255,111,174,.14), transparent 84%),
-      radial-gradient(1400px 1040px at 55% 124%, rgba(255,179,71,.10), transparent 88%),
-      radial-gradient(900px 560px at 34% 60%, rgba(255,255,255,.03), transparent 86%),
-      #040615;
-    }
-    body[data-bg="8"] .bg::before{ background:
-      radial-gradient(1800px 1200px at 16% -12%, rgba(255,111,174,.14), transparent 82%),
-      radial-gradient(1600px 1060px at 90% 0%, rgba(110,203,255,.14), transparent 86%),
-      radial-gradient(1400px 1040px at 55% 124%, rgba(255,179,71,.10), transparent 90%),
-      radial-gradient(900px 560px at 34% 60%, rgba(255,255,255,.03), transparent 86%),
-      #040615;
-    }
-    body[data-bg="9"] .bg::before{ background:
-      radial-gradient(1900px 1280px at 16% 0%, rgba(255,179,71,.14), transparent 84%),
-      radial-gradient(1700px 1140px at 92% 4%, rgba(255,111,174,.12), transparent 88%),
-      radial-gradient(1500px 1100px at 52% 124%, rgba(110,203,255,.08), transparent 92%),
-      radial-gradient(900px 560px at 34% 60%, rgba(255,255,255,.03), transparent 86%),
-      #040615;
-    }
-    body[data-bg="10"] .bg::before{ background:
-      radial-gradient(1900px 1280px at 16% 0%, rgba(110,203,255,.14), transparent 84%),
-      radial-gradient(1700px 1140px at 92% 4%, rgba(255,179,71,.12), transparent 88%),
-      radial-gradient(1500px 1100px at 52% 124%, rgba(255,111,174,.08), transparent 92%),
-      radial-gradient(900px 560px at 34% 60%, rgba(255,255,255,.03), transparent 86%),
-      #040615;
-    }
-    body[data-bg="11"] .bg::before{ background:
-      radial-gradient(2000px 1360px at 18% -10%, rgba(255,111,174,.12), transparent 86%),
-      radial-gradient(1800px 1200px at 92% 2%, rgba(255,179,71,.10), transparent 90%),
-      radial-gradient(1600px 1200px at 52% 124%, rgba(110,203,255,.08), transparent 94%),
-      radial-gradient(900px 560px at 34% 60%, rgba(255,255,255,.03), transparent 86%),
-      #030514;
-    }
-    body[data-bg="12"] .bg::before{ background:
-      radial-gradient(2100px 1400px at 18% -10%, rgba(255,179,71,.10), transparent 88%),
-      radial-gradient(1800px 1200px at 92% 2%, rgba(110,203,255,.10), transparent 92%),
-      radial-gradient(1600px 1200px at 52% 124%, rgba(255,111,174,.08), transparent 96%),
-      radial-gradient(900px 560px at 34% 60%, rgba(255,255,255,.03), transparent 86%),
-      #030514;
-    }
-
-    /* ===== SUNRISE LAYER ===== */
-    .sun{
-      position:fixed; inset:-18%;
-      z-index:1; pointer-events:none;
-      opacity: calc(var(--sunOn) * var(--sunPower));
-      background:
-        radial-gradient(1100px 520px at 24% 10%, color-mix(in srgb, var(--accent) 56%, transparent), transparent 64%),
-        radial-gradient(920px 480px at 78% 18%, rgba(255,111,174,.34), transparent 68%),
-        radial-gradient(1200px 720px at 50% 106%, rgba(110,203,255,.24), transparent 74%);
-      filter: blur(.2px);
-      transform: translateZ(0);
-      animation: sunMove 20s ease-in-out infinite;
-      animation-play-state: calc(var(--motion) * 1) == 1 ? running : paused;
-    }
-    @keyframes sunMove{
-      0%{ transform: translate3d(-1.8%,-1.2%,0) scale(1.03); }
-      50%{ transform: translate3d( 2.0%, 1.6%,0) scale(1.06); }
-      100%{ transform: translate3d(-1.8%,-1.2%,0) scale(1.03); }
-    }
-
-    /* ===== RAIN (ON TOP OF UI) ===== */
-    .rain{
-      position:fixed; inset:0;
-      z-index:90; pointer-events:none;
-      opacity: calc(var(--rainOn) * .95);
-      overflow:hidden;
-    }
-    .drop{
-      position:absolute;
-      top:-18vh;
-      width: calc(18px * var(--rainSize));
-      height: calc(18px * var(--rainSize));
-      border-radius: 999px;
-      background:
-        radial-gradient(circle at 30% 28%, rgba(255,255,255,.74), rgba(255,255,255,.14) 46%, rgba(255,255,255,.03) 72%, transparent 78%),
-        radial-gradient(circle at 70% 80%, rgba(140,220,255,.20), transparent 70%);
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,.06),
-        0 18px 44px rgba(0,0,0,.26);
-      transform: translateZ(0);
-      animation: dropFall linear infinite;
-    }
-    .drop::after{
-      content:"";
-      position:absolute;
-      left:50%;
-      top:-28px;
-      width:2px;
-      height:30px;
-      transform: translateX(-50%);
-      background: linear-gradient(to bottom, transparent, rgba(200,240,255,.26), transparent);
-      border-radius:999px;
-      opacity:.65;
-    }
-    @keyframes dropFall{
-      to{ transform: translateY(160vh) translateZ(0); }
-    }
-
-    /* ===== GLASS ===== */
-    .glass{
-      background: rgba(14,16,28, var(--glass));
-      border: 1px solid var(--stroke);
-      border-radius: var(--r1);
-      backdrop-filter: blur(var(--blur));
-      -webkit-backdrop-filter: blur(var(--blur));
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      position:relative;
-    }
-    .glass::before{
-      content:"";
-      position:absolute; inset:-1px;
-      background:
-        radial-gradient(900px 280px at 18% -10%, rgba(255,255,255,.08), transparent 60%),
-        radial-gradient(900px 280px at 88% 0%, rgba(255,255,255,.06), transparent 62%),
-        linear-gradient(180deg, rgba(255,255,255,.08), transparent 46%);
-      opacity:.92;
-      pointer-events:none;
-    }
-    .glass > *{ position:relative; z-index:1; }
-
-    /* ===== APP LAYOUT (new, bigger, 3-panels + dock) ===== */
-    .app{
-      position:relative;
-      z-index:3;
-      height:100%;
-      padding: var(--pad);
-      display:grid;
-      grid-template-rows: var(--topH) 1fr var(--playerH);
-      gap: var(--gap);
-    }
-
-    .topbar{
-      display:flex;
-      align-items:center;
-      gap: calc(12px * var(--ui));
-      padding: calc(14px * var(--ui));
-    }
-    .brand{
-      display:flex;
-      flex-direction:column;
-      gap: 6px;
-      min-width:0;
-    }
-    .brand .name{
-      font-weight: 990;
-      font-size: var(--fs4);
-      letter-spacing:.2px;
-      background: linear-gradient(90deg, var(--accent), #ff6fae);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .brand .tag{
-      font-weight: 900;
-      font-size: var(--fs2);
-      color: rgba(255,255,255,.70);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .pill{
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      color: rgba(255,255,255,.92);
-      border-radius: 999px;
-      padding: calc(10px * var(--ui)) calc(14px * var(--ui));
-      font-weight: 980;
-      font-size: var(--fs2);
-      user-select:none;
-      white-space:nowrap;
-    }
-
-    .search{
-      flex:1;
-      display:flex;
-      align-items:center;
-      gap: calc(10px * var(--ui));
-      padding: calc(12px * var(--ui)) calc(16px * var(--ui));
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.05);
-      min-width:0;
-    }
-    .search .i{ font-size: var(--fs3); opacity:.9; }
-    .search input{
-      width:100%;
-      border:none; outline:none;
-      background:transparent;
-      color: var(--text);
-      font-size: var(--fs3);
-      font-weight: 950;
-      letter-spacing:.1px;
-      min-width:0;
-    }
-
-    .topBtns{
-      display:flex; gap: calc(10px * var(--ui));
-      flex:0 0 auto;
-    }
-
-    .btn{
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color: rgba(255,255,255,.94);
-      border-radius: calc(18px * var(--ui));
-      padding: calc(12px * var(--ui)) calc(14px * var(--ui));
-      font-weight: 980;
-      font-size: var(--fs3);
-      cursor:pointer;
-      user-select:none;
-      letter-spacing:.1px;
-      white-space:nowrap;
-    }
-    .btn:hover{ background: rgba(255,255,255,.10); }
-    .btn.primary{
-      background:
-        radial-gradient(60% 70% at 30% 25%, rgba(255,255,255,.24), transparent 62%),
-        var(--accent);
-      border-color: color-mix(in srgb, var(--accent) 60%, rgba(255,255,255,.12));
-      color:#141414;
-    }
-    .btn.ghost{ background: rgba(255,255,255,.04); }
-
-    .mid{
-      display:grid;
-      grid-template-columns: var(--leftW) 1fr var(--rightW);
-      gap: var(--gap);
-      min-height:0;
-    }
-
-    /* LEFT: Dock + Quick */
-    .left{
-      display:grid;
-      grid-template-rows: var(--dockH) 1fr;
-      gap: var(--gap);
-      min-height:0;
-    }
-    .dock{
-      padding: calc(12px * var(--ui));
-      display:grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: calc(10px * var(--ui));
-      align-items:stretch;
-    }
-    .dockBtn{
-      border:none;
-      border-radius: calc(20px * var(--ui));
-      background: rgba(255,255,255,.05);
-      border: 1px solid rgba(255,255,255,.10);
-      color: rgba(255,255,255,.92);
-      font-weight: 990;
-      font-size: var(--fs2);
-      cursor:pointer;
-      user-select:none;
-      min-width:0;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
-      gap: 4px;
-      line-height:1.05;
-    }
-    .dockBtn .ico{ font-size: var(--fs3); }
-    .dockBtn .k{ font-size: var(--fs0); opacity:.78; }
-    .dockBtn.active{
-      background:
-        radial-gradient(420px 160px at 50% 0%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 60%),
-        rgba(255,255,255,.06);
-      border-color: color-mix(in srgb, var(--accent) 42%, rgba(255,255,255,.12));
-    }
-
-    .leftPane{
-      padding: calc(16px * var(--ui));
-      overflow:auto;
-      min-height:0;
-    }
-    .leftPane::-webkit-scrollbar{ width: 12px; }
-    .leftPane::-webkit-scrollbar-thumb{
-      background: rgba(255,255,255,.12);
-      border-radius: 999px;
-      border: 3px solid rgba(0,0,0,0);
-      background-clip: padding-box;
-    }
-
-    .bigTitle{
-      font-weight: 990;
-      font-size: var(--fs5);
-      letter-spacing:.2px;
-      margin:0 0 calc(8px * var(--ui)) 0;
-    }
-    .subText{
-      font-weight: 850;
-      font-size: var(--fs3);
-      color: rgba(255,255,255,.75);
-      margin:0 0 calc(16px * var(--ui)) 0;
-      line-height:1.25;
-    }
-
-    .cards{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: calc(12px * var(--ui));
-    }
-    .card{
-      border-radius: var(--r1);
-      border: 1px solid rgba(255,255,255,.10);
-      background:
-        radial-gradient(900px 260px at 18% -10%, rgba(255,255,255,.06), transparent 62%),
-        rgba(0,0,0,.18);
-      padding: calc(16px * var(--ui));
-      cursor:pointer;
-      user-select:none;
-      position:relative;
-      overflow:hidden;
-    }
-    .card:hover{ background: rgba(255,255,255,.06); }
-    .card .t{
-      font-weight: 990;
-      font-size: var(--fs4);
-      letter-spacing:.1px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .card .d{
-      margin-top: calc(8px * var(--ui));
-      font-weight: 850;
-      font-size: var(--fs3);
-      color: rgba(255,255,255,.72);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .card .mini{
-      margin-top: calc(14px * var(--ui));
-      display:flex;
-      gap: calc(10px * var(--ui));
-      flex-wrap:wrap;
-    }
-
-    /* CENTER: Feed / Library */
-    .center{
-      padding: calc(16px * var(--ui));
-      overflow:auto;
-      min-height:0;
-    }
-    .center::-webkit-scrollbar{ width: 12px; }
-    .center::-webkit-scrollbar-thumb{
-      background: rgba(255,255,255,.12);
-      border-radius: 999px;
-      border: 3px solid rgba(0,0,0,0);
-      background-clip: padding-box;
-    }
-
-    .hero{
-      border-radius: var(--r1);
-      border: 1px solid rgba(255,255,255,.10);
-      background:
-        radial-gradient(980px 360px at 16% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 64%),
-        radial-gradient(980px 360px at 84% 0%, rgba(110,203,255,.14), transparent 68%),
-        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
-        rgba(255,255,255,.03);
-      padding: calc(18px * var(--ui));
-    }
-    .hero h1{
-      margin:0;
-      font-weight: 990;
-      font-size: var(--fs5);
-      letter-spacing:.2px;
-    }
-    .hero p{
-      margin: calc(10px * var(--ui)) 0 0;
-      font-weight: 860;
-      font-size: var(--fs3);
-      color: rgba(255,255,255,.75);
-      line-height:1.25;
-    }
-
-    .grid2{
-      margin-top: calc(14px * var(--ui));
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: calc(14px * var(--ui));
-    }
-
-    .panel{
-      border-radius: var(--r1);
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.03);
-      padding: calc(16px * var(--ui));
-      min-height:0;
-    }
-    .panel h3{
-      margin:0 0 calc(12px * var(--ui)) 0;
-      font-weight: 990;
-      font-size: var(--fs4);
-      letter-spacing:.1px;
-    }
-
-    .list{
-      display:flex;
-      flex-direction:column;
-      gap: calc(12px * var(--ui));
-      min-width:0;
-    }
-    .item{
-      border-radius: var(--r1);
-      border: 1px solid rgba(255,255,255,.10);
-      background:
-        radial-gradient(900px 260px at 18% -10%, rgba(255,255,255,.05), transparent 62%),
-        rgba(0,0,0,.16);
-      padding: calc(16px * var(--ui));
-      cursor:pointer;
-      user-select:none;
-      overflow:hidden;
-      position:relative;
-    }
-    .item:hover{ background: rgba(255,255,255,.06); }
-    .item.active{
-      border-color: color-mix(in srgb, var(--accent) 44%, rgba(255,255,255,.12));
-      background:
-        radial-gradient(980px 320px at 18% -10%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 62%),
-        rgba(255,255,255,.06);
-    }
-    .item .t{
-      font-weight: 990;
-      font-size: var(--fs4);
-      letter-spacing:.1px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .item .d{
-      margin-top: calc(8px * var(--ui));
-      font-weight: 850;
-      font-size: var(--fs3);
-      color: rgba(255,255,255,.72);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .note{
-      margin-top: calc(10px * var(--ui));
-      font-weight: 850;
-      font-size: var(--fs3);
-      color: rgba(255,255,255,.70);
-      line-height:1.35;
-    }
-
-    /* RIGHT: Queue + Tools */
-    .right{
-      display:grid;
-      grid-template-rows: 1fr 1fr;
-      gap: var(--gap);
-      min-height:0;
-    }
-    .rightPane{
-      padding: calc(16px * var(--ui));
-      overflow:auto;
-      min-height:0;
-    }
-    .rightPane::-webkit-scrollbar{ width: 12px; }
-    .rightPane::-webkit-scrollbar-thumb{
-      background: rgba(255,255,255,.12);
-      border-radius: 999px;
-      border: 3px solid rgba(0,0,0,0);
-      background-clip: padding-box;
-    }
-
-    .meter{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: calc(10px * var(--ui));
-      margin-top: calc(10px * var(--ui));
-    }
-    .meter span{
-      font-weight: 980;
-      font-size: var(--fs3);
-      color: rgba(255,255,255,.80);
-      white-space:nowrap;
-    }
-    input[type="range"]{
-      width:100%;
-      accent-color: var(--accent);
-      height: calc(26px * var(--ui));
-    }
-
-    /* ===== PLAYER (new, bigger, glossy) ===== */
-    .player{
-      padding: calc(14px * var(--ui)) calc(16px * var(--ui));
-      display:grid;
-      grid-template-columns: 1.45fr 1fr 1.25fr;
-      gap: var(--gap);
-      align-items:center;
-
-      background:
-        radial-gradient(1000px 260px at 18% 0%, rgba(255,179,71,.12), transparent 62%),
-        radial-gradient(1000px 260px at 82% 0%, rgba(255,111,174,.10), transparent 66%),
-        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02)),
-        rgba(14,16,28, .56);
-      border: 1px solid rgba(255,255,255,.14);
-      border-radius: var(--r1);
-      backdrop-filter: blur(22px);
-      -webkit-backdrop-filter: blur(22px);
-      box-shadow: 0 34px 140px rgba(0,0,0,.74);
-      overflow:hidden;
-      position:relative;
-    }
-    .player::before{
-      content:"";
-      position:absolute; inset:-1px;
-      background:
-        radial-gradient(1000px 320px at 16% -10%, rgba(255,255,255,.10), transparent 64%),
-        radial-gradient(900px 300px at 86% 0%, rgba(255,255,255,.08), transparent 66%);
-      opacity:.92;
-      pointer-events:none;
-    }
-    .player > *{ position:relative; z-index:1; }
-
-    .now{
-      display:flex;
-      align-items:center;
-      gap: calc(12px * var(--ui));
-      min-width:0;
-    }
-    .art{
-      width: calc(84px * var(--ui));
-      height: calc(84px * var(--ui));
-      border-radius: calc(26px * var(--ui));
-      background:
-        radial-gradient(55% 70% at 30% 28%, rgba(255,255,255,.18), transparent 56%),
-        linear-gradient(135deg, rgba(255,255,255,.08), color-mix(in srgb, var(--accent) 26%, transparent));
-      border: 1px solid rgba(255,255,255,.16);
-      box-shadow: 0 18px 46px rgba(0,0,0,.28);
-      flex:0 0 auto;
-    }
-    .meta{ min-width:0; }
-    .track{
-      font-weight: 990;
-      font-size: var(--fs4);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .artist{
-      margin-top: calc(6px * var(--ui));
-      font-weight: 860;
-      font-size: var(--fs3);
-      color: rgba(255,255,255,.76);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .ctrl{
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      gap: calc(12px * var(--ui));
-    }
-    .pbtn{
-      width: calc(54px * var(--ui));
-      height: calc(54px * var(--ui));
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.16);
-      background:
-        radial-gradient(60% 70% at 30% 28%, rgba(255,255,255,.10), transparent 60%),
-        rgba(255,255,255,.06);
-      color: rgba(255,255,255,.96);
-      cursor:pointer;
-      display:grid;
-      place-items:center;
-      font-weight: 990;
-      user-select:none;
-      box-shadow:
-        0 12px 30px rgba(0,0,0,.20) inset,
-        0 14px 30px rgba(0,0,0,.16);
-      font-size: var(--fs3);
-    }
-    .pbtn:hover{ background: rgba(255,255,255,.10); }
-    .pbtn.play{
-      width: calc(70px * var(--ui));
-      height: calc(70px * var(--ui));
-      background:
-        radial-gradient(60% 70% at 30% 25%, rgba(255,255,255,.24), transparent 62%),
-        var(--accent);
-      border-color: color-mix(in srgb, var(--accent) 60%, rgba(255,255,255,.12));
-      color:#141414;
-      font-size: var(--fs4);
-    }
-
-    .rightControls{
-      display:flex;
-      align-items:center;
-      justify-content:flex-end;
-      gap: calc(10px * var(--ui));
-      flex-wrap:wrap;
-      min-width:0;
-    }
-    .badge{
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      color: rgba(255,255,255,.90);
-      border-radius: 999px;
-      padding: calc(10px * var(--ui)) calc(12px * var(--ui));
-      font-weight: 980;
-      font-size: var(--fs2);
-      user-select:none;
-      white-space:nowrap;
-    }
-    #audio{ display:none; }
-
-    /* ===== MODAL HELP ===== */
-    .modalWrap{
-      position:fixed; inset:0;
-      display:none;
-      z-index: 95;
-      background: rgba(0,0,0,.56);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      align-items:center;
-      justify-content:center;
-      padding: calc(18px * var(--ui));
-    }
-    .modal{
-      width: min(760px, 100%);
-      border-radius: var(--r1);
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(14,16,28,.90);
-      box-shadow: 0 44px 160px rgba(0,0,0,.82);
-      overflow:hidden;
-    }
-    .mTop{
-      padding: calc(16px * var(--ui));
-      border-bottom: 1px solid rgba(255,255,255,.10);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: calc(12px * var(--ui));
-    }
-    .mTop .ttl{
-      font-weight: 990;
-      font-size: var(--fs4);
-      letter-spacing:.1px;
-    }
-    .mBody{
-      padding: calc(16px * var(--ui));
-      color: rgba(255,255,255,.84);
-      font-weight: 860;
-      font-size: var(--fs3);
-      line-height: 1.35;
-      white-space:pre-wrap;
-    }
-
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 1260px){
-      :root{ --rightW: calc(380px * var(--ui)); }
-      .grid2{ grid-template-columns: 1fr; }
-    }
-    @media (max-width: 980px){
-      :root{
-        --leftW: calc(360px * var(--ui));
-        --rightW: calc(360px * var(--ui));
-      }
-    }
-    @media (max-width: 860px){
-      body{ overflow:auto; }
-      .app{
-        height:auto;
-        grid-template-rows: auto auto auto;
-      }
-      .mid{ grid-template-columns: 1fr; }
-      .right{ grid-template-rows: auto auto; }
-      .player{
-        grid-template-columns: 1fr;
-      }
-      #audio{ display:block; width:100%; }
+    /* Локальный плеер */
+    #local-player {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #000;
+      border-top: 1px solid #282828;
+      padding: 1rem;
+      z-index: 100;
+    }
+    #player-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1100px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    #track-info {
+      flex: 1;
+      min-width: 200px;
+    }
+    #track-title { font-weight: bold; }
+    #track-artist { color: var(--gray); font-size: 0.9rem; }
+    #controls button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.6rem;
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+    #controls button:hover { color: var(--accent); }
+    #progress-container {
+      flex: 3;
+      min-width: 200px;
+      background: #535353;
+      height: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      position: relative;
+    }
+    #progress { 
+      background: var(--accent);
+      width: 0%;
+      height: 100%;
+      border-radius: 5px;
+    }
+    #time {
+      font-size: 0.85rem;
+      color: var(--gray);
+      margin-top: 0.4rem;
+      text-align: center;
+    }
+    #playlist {
+      margin-top: 1.5rem;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    #playlist li {
+      padding: 0.8rem 1rem;
+      cursor: pointer;
+      transition: 0.2s;
+      border-radius: 6px;
+    }
+    #playlist li:hover,
+    #playlist li.active {
+      background: #282828;
+      color: var(--accent);
+    }
+    input[type="file"] {
+      margin: 1rem 0;
+      color: white;
     }
   </style>
 </head>
+<body>
 
-<body data-bg="3">
-  <div class="bg"></div>
-  <div class="sun"></div>
-  <div class="rain" id="rain"></div>
+<header>
+  <h1>Music Hub</h1>
+  <p class="subtitle">Spotify плейлисты онлайн + твои mp3 локально</p>
+</header>
 
-  <div class="modalWrap" id="mw">
-    <div class="modal">
-      <div class="mTop">
-        <div class="ttl" id="mt">Подсказка</div>
-        <button class="btn ghost" id="mc">Закрыть</button>
-      </div>
-      <div class="mBody" id="mb"></div>
+<div class="section">
+  <h2>Spotify плейлисты (онлайн)</h2>
+  <div class="embed-grid">
+
+    <!-- Разные жанры / популярные -->
+    <div class="embed-card">
+      <iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M" width="100%" height="380" frameborder="0" allow="encrypted-media"></iframe>
     </div>
+    <div class="embed-card">
+      <iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DX0XUsuxWHRQd" width="100%" height="380" frameborder="0" allow="encrypted-media"></iframe>
+    </div>
+    <div class="embed-card">
+      <iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DX2sUQwD7tbmL" width="100%" height="380" frameborder="0" allow="encrypted-media"></iframe>
+    </div>
+    <div class="embed-card">
+      <iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DX4JAvHpjipBk" width="100%" height="380" frameborder="0" allow="encrypted-media"></iframe>
+    </div>
+    <div class="embed-card">
+      <iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DX2L0iB23En6i" width="100%" height="380" frameborder="0" allow="encrypted-media"></iframe>
+    </div>
+    <div class="embed-card">
+      <iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DX1lVhptIYRda" width="100%" height="380" frameborder="0" allow="encrypted-media"></iframe>
+    </div>
+
+    <!-- Можно добавить ещё 10–20 плейлистов по вкусу -->
   </div>
+</div>
 
-  <div class="app">
-    <!-- TOPBAR -->
-    <header class="glass topbar">
-      <div class="brand">
-        <div class="name">Краски Рассвета</div>
-        <div class="tag" id="tagline">медиатека • плейлисты • очереди • эффекты</div>
+<div class="section">
+  <h2>Локальный плеер • твои mp3 файлы</h2>
+  <p>Выбери папку или отдельные треки (mp3) с компьютера</p>
+  <input type="file" id="file-input" multiple accept="audio/*" />
+
+  <div id="local-player">
+    <div id="player-controls">
+      <div id="track-info">
+        <div id="track-title">Выбери трек...</div>
+        <div id="track-artist"></div>
       </div>
 
-      <div class="pill" id="ver">REL-UI-NEO</div>
-
-      <div class="search">
-        <div class="i">🔎</div>
-        <input id="q" placeholder="Поиск по трекам / авторам / плейлистам" autocomplete="off" />
+      <div id="controls">
+        <button id="prev">⏮</button>
+        <button id="play-pause">▶</button>
+        <button id="next">⏭</button>
       </div>
 
-      <div class="topBtns">
-        <button class="btn" id="bHelp">?</button>
-        <button class="btn primary" id="bSettings">Настройки</button>
+      <div id="progress-container">
+        <div id="progress"></div>
       </div>
-    </header>
+    </div>
 
-    <!-- MID -->
-    <section class="mid">
-      <!-- LEFT -->
-      <aside class="left">
-        <nav class="glass dock" id="dock">
-          <button class="dockBtn active" data-p="home"><div class="ico">🌅</div><div>Главная</div><div class="k">1</div></button>
-          <button class="dockBtn" data-p="library"><div class="ico">🎧</div><div>Библиотека</div><div class="k">2</div></button>
-          <button class="dockBtn" data-p="playlists"><div class="ico">📁</div><div>Плейлисты</div><div class="k">3</div></button>
-          <button class="dockBtn" data-p="queue"><div class="ico">🧠</div><div>Очередь</div><div class="k">4</div></button>
-          <button class="dockBtn" data-p="settings"><div class="ico">⚙</div><div>Настройки</div><div class="k">5</div></button>
-        </nav>
+    <div id="time">0:00 / 0:00</div>
 
-        <div class="glass leftPane">
-          <div id="leftSlot"></div>
-        </div>
-      </aside>
-
-      <!-- CENTER -->
-      <main class="glass center">
-        <div id="centerSlot"></div>
-      </main>
-
-      <!-- RIGHT -->
-      <aside class="right">
-        <div class="glass rightPane">
-          <div id="rightTop"></div>
-        </div>
-        <div class="glass rightPane">
-          <div id="rightBottom"></div>
-        </div>
-      </aside>
-    </section>
-
-    <!-- PLAYER -->
-    <footer class="player">
-      <div class="now">
-        <div class="art"></div>
-        <div class="meta">
-          <div class="track" id="tName">Нет активного трека</div>
-          <div class="artist" id="tArtist">Выбери трек</div>
-        </div>
-      </div>
-
-      <div class="ctrl">
-        <button class="pbtn" id="prev" title="Предыдущий">⏮</button>
-        <button class="pbtn play" id="play" title="Play">▶</button>
-        <button class="pbtn" id="next" title="Следующий">⏭</button>
-        <button class="pbtn" id="stop" title="Стоп">⏹</button>
-      </div>
-
-      <div class="rightControls">
-        <button class="btn" id="bToPl">В плейлист</button>
-        <button class="btn ghost" id="bFav">♡</button>
-        <span class="badge" id="src">Source: —</span>
-        <span class="badge" id="mode">Mode: Normal</span>
-        <audio id="audio" controls></audio>
-      </div>
-    </footer>
+    <ul id="playlist"></ul>
   </div>
+</div>
 
-  <script>
-    const $ = (s) => document.querySelector(s);
+<audio id="audio" preload="metadata"></audio>
 
-    /* =========================
-       MODAL
-    ========================== */
-    const mw = $("#mw"), mt = $("#mt"), mb = $("#mb");
-    $("#mc").addEventListener("click", ()=> mw.style.display="none");
-    mw.addEventListener("click", (e)=>{ if(e.target===mw) mw.style.display="flex"; });
-    document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") mw.style.display="none"; });
-    function tip(title, text){
-      mt.textContent = title || "Подсказка";
-      mb.textContent = text || "";
-      mw.style.display = "flex";
-    }
+<script>
+// --------------------- ЛОКАЛЬНЫЙ ПЛЕЕР ---------------------
+const audio = document.getElementById('audio');
+const playPauseBtn = document.getElementById('play-pause');
+const prevBtn = document.getElementById('prev');
+const nextBtn = document.getElementById('next');
+const progressContainer = document.getElementById('progress-container');
+const progress = document.getElementById('progress');
+const timeDisplay = document.getElementById('time');
+const playlistEl = document.getElementById('playlist');
+const titleEl = document.getElementById('track-title');
+const artistEl = document.getElementById('track-artist');
 
-    /* =========================
-       STORAGE KEYS
-    ========================== */
-    const LS = {
-      ui:"krs_ui2", accent:"krs_accent2", bg:"krs_bg2",
-      glass:"krs_glass2",
-      rainOn:"krs_rainOn2", rainCount:"krs_rainCount2", rainSize:"krs_rainSize2", rainSpeed:"krs_rainSpeed2",
-      sunOn:"krs_sunOn2", sunPower:"krs_sunPower2",
-      motion:"krs_motion2",
-      playlists:"krs_playlists_v5",
-      favorites:"krs_favorites_v2",
-      smart:"krs_smart_v1",
-      queue:"krs_queue_v1"
-    };
+let songs = [];
+let currentIndex = 0;
+let isPlaying = false;
 
-    function lsGet(k, def){ const v=localStorage.getItem(k); return (v==null)? def : v; }
-    function lsSet(k, v){ localStorage.setItem(k, String(v)); }
+function formatTime(seconds) {
+  const min = Math.floor(seconds / 60);
+  const sec = Math.floor(seconds % 60);
+  return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+}
 
-    const root = document.documentElement;
-    function applyVar(name, value){
-      root.style.setProperty(name, value);
-    }
+function loadSong(index) {
+  if (songs.length === 0) return;
+  currentIndex = index;
+  const song = songs[index];
+  audio.src = song.url;
+  titleEl.textContent = song.title || 'Без названия';
+  artistEl.textContent = song.artist || '';
+  audio.load();
 
-    /* =========================
-       APPLY SAVED SETTINGS
-    ========================== */
-    const ui0 = parseFloat(lsGet(LS.ui, getComputedStyle(root).getPropertyValue("--ui").trim())) || 2.10;
-    const a0  = lsGet(LS.accent, getComputedStyle(root).getPropertyValue("--accent").trim()) || "#ffb347";
-    const bg0 = parseInt(lsGet(LS.bg, document.body.getAttribute("data-bg") || "3"),10) || 3;
-    const g0  = parseFloat(lsGet(LS.glass, getComputedStyle(root).getPropertyValue("--glass").trim())) || .58;
+  document.querySelectorAll('#playlist li').forEach((li,i) => {
+    li.classList.toggle('active', i === index);
+  });
 
-    const rOn0= parseInt(lsGet(LS.rainOn, getComputedStyle(root).getPropertyValue("--rainOn").trim()),10) || 1;
-    const rCt0= parseInt(lsGet(LS.rainCount, getComputedStyle(root).getPropertyValue("--rainCount").trim()),10) || 120;
-    const rSz0= parseFloat(lsGet(LS.rainSize, getComputedStyle(root).getPropertyValue("--rainSize").trim())) || 1.15;
-    const rSp0= parseFloat(lsGet(LS.rainSpeed, getComputedStyle(root).getPropertyValue("--rainSpeed").trim())) || 1.00;
+  if (isPlaying) audio.play();
+}
 
-    const sOn0= parseInt(lsGet(LS.sunOn, getComputedStyle(root).getPropertyValue("--sunOn").trim()),10) || 1;
-    const sPw0= parseFloat(lsGet(LS.sunPower, getComputedStyle(root).getPropertyValue("--sunPower").trim())) || .90;
+function playSong() {
+  isPlaying = true;
+  playPauseBtn.textContent = '⏸';
+  audio.play().catch(e => console.log("Play error:", e));
+}
 
-    const m0  = parseInt(lsGet(LS.motion, getComputedStyle(root).getPropertyValue("--motion").trim()),10) || 1;
+function pauseSong() {
+  isPlaying = false;
+  playPauseBtn.textContent = '▶';
+  audio.pause();
+}
 
-    applyVar("--ui", ui0);
-    applyVar("--accent", a0);
-    applyVar("--glass", g0);
-    applyVar("--rainOn", rOn0);
-    applyVar("--rainCount", rCt0);
-    applyVar("--rainSize", rSz0);
-    applyVar("--rainSpeed", rSp0);
-    applyVar("--sunOn", sOn0);
-    applyVar("--sunPower", sPw0);
-    applyVar("--motion", m0);
-    document.body.setAttribute("data-bg", String(bg0));
+playPauseBtn.addEventListener('click', () => {
+  if (isPlaying) pauseSong();
+  else playSong();
+});
 
-    /* =========================
-       RAIN
-    ========================== */
-    const rainLayer = $("#rain");
-    let drops = [];
-    function rebuildRain(){
-      drops.forEach(d=> d.remove());
-      drops = [];
-      const on = parseInt(getComputedStyle(root).getPropertyValue("--rainOn"))===1;
-      const count = parseInt(getComputedStyle(root).getPropertyValue("--rainCount")) || 0;
-      const speed = parseFloat(getComputedStyle(root).getPropertyValue("--rainSpeed")) || 1.0;
-      if(!on || count<=0) return;
+prevBtn.addEventListener('click', () => {
+  currentIndex = (currentIndex - 1 + songs.length) % songs.length;
+  loadSong(currentIndex);
+  playSong();
+});
 
-      const w = window.innerWidth;
-      for(let i=0;i<count;i++){
-        const d = document.createElement("div");
-        d.className = "drop";
-        const left = Math.random() * w;
-        const dur  = (2.9 + Math.random()*6.2) / Math.max(0.2, speed);
-        const delay= Math.random()*2.8;
-        const op   = 0.18 + Math.random()*0.36;
-        d.style.left = left + "px";
-        d.style.animationDuration = dur + "s";
-        d.style.animationDelay = delay + "s";
-        d.style.opacity = op;
-        rainLayer.appendChild(d);
-        drops.push(d);
-      }
-    }
-    window.addEventListener("resize", rebuildRain);
+nextBtn.addEventListener('click', () => {
+  currentIndex = (currentIndex + 1) % songs.length;
+  loadSong(currentIndex);
+  playSong();
+});
 
-    /* =========================
-       DATA MODEL
-    ========================== */
-    const audio = $("#audio");
-    const SOURCE = { NONE:"—", LOCAL:"Local", REPO:"Repo" };
+audio.addEventListener('timeupdate', () => {
+  if (audio.duration) {
+    const percent = (audio.currentTime / audio.duration) * 100;
+    progress.style.width = percent + '%';
+    timeDisplay.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+  }
+});
 
-    function setSrc(s){ $("#src").textContent = "Source: " + s; }
-    function setMode(t){ $("#mode").textContent = "Mode: " + t; }
+progressContainer.addEventListener('click', e => {
+  const width = progressContainer.clientWidth;
+  const clickX = e.offsetX;
+  const percent = clickX / width;
+  audio.currentTime = percent * audio.duration;
+});
 
-    function fmtBytes(bytes){
-      const u=["B","KB","MB","GB"]; let i=0, n=bytes;
-      while(n>=1024 && i<u.length-1){ n/=1024; i++; }
-      return (i===0? n : n.toFixed(1))+" "+u[i];
-    }
-    function parseName(name){
-      const base = String(name||"").replace(/\.[^/.]+$/,"");
-      const parts = base.split(" - ");
-      if(parts.length>=2){
-        return { artist: parts[0].trim()||"Unknown", title: parts.slice(1).join(" - ").trim()||"Untitled" };
-      }
-      return { artist:"Unknown", title: base.trim()||"Untitled" };
-    }
-    function hash(s){
-      let h=2166136261;
-      for(let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
-      return (h>>>0).toString(16);
-    }
-    function refKey(r){ return r.kind + ":" + r.id; }
+audio.addEventListener('ended', () => {
+  currentIndex = (currentIndex + 1) % songs.length;
+  loadSong(currentIndex);
+  playSong();
+});
 
-    /* =========================
-       INDEXEDDB (LOCAL TRACKS)
-    ========================== */
-    const DB="krs_db2", VER=1, STORE="tracks";
-    function openDB(){
-      return new Promise((res, rej)=>{
-        const req = indexedDB.open(DB, VER);
-        req.onupgradeneeded=()=>{
-          const db=req.result;
-          if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath:"id" });
-        };
-        req.onsuccess=()=>res(req.result);
-        req.onerror=()=>rej(req.error);
-      });
-    }
-    async function dbAll(){
-      const db = await openDB();
-      return new Promise((res, rej)=>{
-        const tx = db.transaction(STORE, "readonly");
-        const rq = tx.objectStore(STORE).getAll();
-        rq.onsuccess=()=>{ const r=rq.result||[]; db.close(); res(r); };
-        rq.onerror=()=>{ const e=rq.error; db.close(); rej(e); };
-      });
-    }
-    async function dbPut(obj){
-      const db = await openDB();
-      return new Promise((res, rej)=>{
-        const tx=db.transaction(STORE, "readwrite");
-        tx.objectStore(STORE).put(obj);
-        tx.oncomplete=()=>{ db.close(); res(); };
-        tx.onerror=()=>{ const e=tx.error; db.close(); rej(e); };
-      });
-    }
-    async function dbClear(){
-      const db = await openDB();
-      return new Promise((res, rej)=>{
-        const tx=db.transaction(STORE, "readwrite");
-        tx.objectStore(STORE).clear();
-        tx.oncomplete=()=>{ db.close(); res(); };
-        tx.onerror=()=>{ const e=tx.error; db.close(); rej(e); };
-      });
-    }
+document.getElementById('file-input').addEventListener('change', e => {
+  const files = e.target.files;
+  songs = [];
+  playlistEl.innerHTML = '';
 
-    let localTracks = []; // {id,kind:"local",artist,title,size,type,createdAt,blob,name}
-    let repoTracks  = []; // {id,kind:"repo",artist,title,url}
+  Array.from(files).forEach((file, i) => {
+    const url = URL.createObjectURL(file);
+    const title = file.name.replace(/\.[^/.]+$/, ""); // убираем расширение
+    songs.push({ url, title, artist: '' });
 
-    async function loadRepo(){
-      repoTracks = [];
-      try{
-        const r = await fetch("assets/audio/manifest.json", { cache:"no-store" });
-        if(!r.ok) throw new Error("no manifest");
-        const arr = await r.json();
-        if(Array.isArray(arr)){
-          repoTracks = arr.map((x,i)=>{
-            const url = String(x.url||"").trim();
-            if(!url) return null;
-            const a = String(x.artist||"").trim();
-            const t = String(x.title||"").trim();
-            if(a && t) return { id:"r_"+i+"_"+hash(url), kind:"repo", artist:a, title:t, url };
-            const parsed = parseName(url.split("/").pop() || url);
-            return { id:"r_"+i+"_"+hash(url), kind:"repo", artist: parsed.artist, title: parsed.title, url };
-          }).filter(Boolean);
-        }
-      }catch{
-        repoTracks = [];
-      }
-    }
-
-    async function loadLocal(){
-      const raw = await dbAll();
-      localTracks = raw
-        .map(x=>{
-          const p = parseName(x.name || (x.artist+" - "+x.title) || "Unknown - Untitled");
-          return {
-            id: x.id,
-            kind:"local",
-            artist: x.artist || p.artist,
-            title:  x.title  || p.title,
-            name:   x.name || (p.artist + " - " + p.title),
-            size: x.size || 0,
-            type: x.type || "audio/*",
-            createdAt: x.createdAt || 0,
-            blob: x.blob
-          };
-        })
-        .sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
-    }
-
-    function getAllTracks(){ return [...repoTracks, ...localTracks]; }
-    function byRef(ref){
-      if(!ref) return null;
-      if(ref.kind==="local") return localTracks.find(t=>t.id===ref.id)||null;
-      if(ref.kind==="repo")  return repoTracks.find(t=>t.id===ref.id)||null;
-      return null;
-    }
-
-    /* =========================
-       PLAYLISTS + FAVORITES + QUEUE
-    ========================== */
-    function defaultPL(){
-      return {
-        selected:"pl_all",
-        items:[
-          { id:"pl_all", name:"Все треки", refs:[] },   // virtual
-          { id:"pl_fav", name:"Избранное", refs:[] }
-        ]
-      };
-    }
-    function plLoad(){
-      try{
-        const s = localStorage.getItem(LS.playlists);
-        if(!s) return defaultPL();
-        const x = JSON.parse(s);
-        if(!x?.items?.length) return defaultPL();
-        return x;
-      }catch{ return defaultPL(); }
-    }
-    function plSave(){ localStorage.setItem(LS.playlists, JSON.stringify(pl)); }
-
-    let pl = plLoad();
-
-    function plGet(id){ return pl.items.find(p=>p.id===id)||null; }
-    function plNormalizeAll(){
-      const all = plGet("pl_all");
-      if(all) all.refs = getAllTracks().map(t=>({kind:t.kind, id:t.id}));
-      if(!plGet(pl.selected)) pl.selected = "pl_all";
-      if(!plGet("pl_fav")) pl.items.push({ id:"pl_fav", name:"Избранное", refs:[] });
-    }
-    function plAdd(ref, plId){
-      const p = plGet(plId);
-      if(!p || p.id==="pl_all") return;
-      const k = refKey(ref);
-      if(!p.refs.some(x=>refKey(x)===k)){
-        p.refs.push({kind:ref.kind, id:ref.id});
-        plSave();
-      }
-    }
-    function plRemove(ref, plId){
-      const p = plGet(plId);
-      if(!p || p.id==="pl_all") return;
-      const k = refKey(ref);
-      p.refs = p.refs.filter(x=>refKey(x)!==k);
-      plSave();
-    }
-
-    function favLoad(){
-      try{ return new Set(JSON.parse(localStorage.getItem(LS.favorites) || "[]")); }
-      catch{ return new Set(); }
-    }
-    function favSave(){
-      localStorage.setItem(LS.favorites, JSON.stringify(Array.from(favs)));
-    }
-    let favs = favLoad(); // keys "kind:id"
-
-    function queueLoad(){
-      try{
-        const a = JSON.parse(localStorage.getItem(LS.queue) || "[]");
-        if(Array.isArray(a)) return a;
-        return [];
-      }catch{ return []; }
-    }
-    function queueSave(){
-      localStorage.setItem(LS.queue, JSON.stringify(queue));
-    }
-    let queue = queueLoad(); // refs
-
-    function queuePush(ref){
-      const k = refKey(ref);
-      if(!queue.some(r=>refKey(r)===k)){
-        queue.push({kind:ref.kind, id:ref.id});
-        queueSave();
-      }
-    }
-    function queueRemove(ref){
-      const k = refKey(ref);
-      queue = queue.filter(r=>refKey(r)!==k);
-      queueSave();
-    }
-    function queueClear(){
-      queue = [];
-      queueSave();
-    }
-
-    /* =========================
-       PLAYBACK (ONE ACTIVE + SMART MODES)
-    ========================== */
-    let active = null;
-    let activeSource = SOURCE.NONE;
-
-    const SMART = {
-      on: parseInt(lsGet(LS.smart, "0"),10) || 0,
-      mood: parseInt(lsGet("krs_mood_v1","55"),10) || 55,  // 0..100
-      focus: parseInt(lsGet("krs_focus_v1","0"),10) || 0,  // 0/1
-      timerMin: parseInt(lsGet("krs_timer_v1","0"),10) || 0
-    };
-
-    let timerHandle = null;
-
-    function setNow(title, artist){
-      $("#tName").textContent = title || "—";
-      $("#tArtist").textContent = artist || "—";
-    }
-
-    function stopAudio(){
-      try{ audio.pause(); audio.removeAttribute("src"); audio.load(); }catch{}
-    }
-
-    function stopAll(){
-      stopAudio();
-      active=null;
-      activeSource=SOURCE.NONE;
-      setSrc(SOURCE.NONE);
-      setNow("Остановлено", "Выбери трек");
-      $("#play").textContent = "▶";
-      renderAll();
-    }
-
-    function playTrack(ref){
-      const t = byRef(ref);
-      if(!t) return_dbNotifyMissing(ref);
-
-      stopAudio();
-
-      if(ref.kind==="repo"){
-        audio.src = t.url;
-        audio.play().catch(()=>{});
-        active = ref;
-        activeSource = SOURCE.REPO;
-        setSrc(SOURCE.REPO);
-        setNow(t.artist + " — " + t.title, "Repo");
-        renderAll();
-        return;
-      }
-
-      if(ref.kind==="local"){
-        const lt = localTracks.find(x=>x.id===ref.id);
-        if(!lt) return;
-        const url = URL.createObjectURL(lt.blob);
-        audio.src = url;
-        audio.play().catch(()=>{});
-        active = ref;
-        activeSource = SOURCE.LOCAL;
-        setSrc(SOURCE.LOCAL);
-        setNow(lt.artist + " — " + lt.title, "Local • " + fmtBytes(lt.size));
-        renderAll();
-        return;
-      }
-    }
-
-    function _dbNotifyMissing(ref){
-      tip("Трек не найден", "Этот трек был удалён/не загрузился: " + refKey(ref));
-    }
-
-    function getNavList(){
-      plNormalizeAll();
-
-      if(queue.length){
-        return queue.slice();
-      }
-
-      const selected = plGet(pl.selected);
-      if(selected && selected.refs && selected.refs.length && selected.id!=="pl_all"){
-        return selected.refs.slice();
-      }
-
-      const all = getAllTracks().map(t=>({kind:t.kind, id:t.id}));
-
-      if(SMART.on){
-        // SmartMix: легкая сортировка по mood (чем выше mood, тем больше шанс "ярких" => акцент на Repo, иначе на Local)
-        // + избранные сверху
-        const favSet = new Set(Array.from(favs));
-        const mood = SMART.mood;
-        all.sort((a,b)=>{
-          const ak = refKey(a), bk = refKey(b);
-          const af = favSet.has(ak) ? 1 : 0;
-          const bf = favSet.has(bk) ? 1 : 0;
-          if(af!==bf) return bf-af;
-
-          // mood bias: >50 => repo выше, <50 => local выше
-          const aw = (a.kind==="repo") ? (mood>=50? 1:0) : (mood<50? 1:0);
-          const bw = (b.kind==="repo") ? (mood>=50? 1:0) : (mood<50? 1:0);
-          if(aw!==bw) return bw-aw;
-
-          return 0;
-        });
-      }
-
-      return all;
-    }
-
-    function navStep(dir){
-      const list = getNavList();
-      if(!list.length) return;
-
-      const cur = active ? refKey(active) : "";
-      const idx = list.findIndex(r=>refKey(r)===cur);
-
-      let ni = 0;
-      if(idx>=0){
-        ni = dir<0 ? (idx<=0 ? list.length-1 : idx-1) : ((idx+1)%list.length);
-      }
-      playTrack(list[ni]);
-    }
-
-    $("#prev").addEventListener("click", ()=> navStep(-1));
-    $("#next").addEventListener("click", ()=> navStep(+1));
-    $("#stop").addEventListener("click", stopAll);
-
-    $("#play").addEventListener("click", ()=>{
-      if(audio.src){
-        if(audio.paused) audio.play().catch(()=>{});
-        else audio.pause();
-        return;
-      }
-      const list = getNavList();
-      if(list.length) playTrack(list[0]);
+    const li = document.createElement('li');
+    li.textContent = title;
+    li.addEventListener('click', () => {
+      loadSong(i);
+      playSong();
     });
+    playlistEl.appendChild(li);
+  });
 
-    audio.addEventListener("play", ()=> $("#play").textContent="⏸");
-    audio.addEventListener("pause", ()=> $("#play").textContent="▶");
-    audio.addEventListener("ended", ()=>{
-      $("#play").textContent="▶";
-      // auto-next with SmartMix or queue
-      if(SMART.focus){
-        // focus: не автопереключаем, оставляем тишину
-        return;
-      }
-      navStep(+1);
-    });
+  if (songs.length > 0) {
+    loadSong(0);
+  }
+});
 
-    function setSleepTimer(min){
-      if(timerHandle) clearTimeout(timerHandle);
-      timerHandle = null;
-      SMART.timerMin = min;
-      lsSet("krs_timer_v1", String(min));
-      if(min>0){
-        timerHandle = setTimeout(()=> stopAll(), min*60*1000);
-      }
-    }
+// --------------------- конец локального плеера ---------------------
+</script>
 
-    /* =========================
-       ADD TO PLAYLIST FLOW
-    ========================== */
-    function addToPlaylistFlow(ref){
-      if(!ref) {
-        if(!active) return tip("В плейлист", "Сначала выбери трек.");
-        ref = active;
-      }
-      plNormalizeAll();
-      const names = pl.items.filter(p=>p.id!=="pl_all").map(p=>p.name);
-      if(!names.length){
-        return tip("В плейлист", "Сначала создай плейлист.");
-      }
-      const chosen = prompt("Куда добавить? Введи точное название:\n" + names.join("\n"));
-      if(!chosen) return;
-      const p = pl.items.find(x=>x.id!=="pl_all" && x.name===chosen);
-      if(!p) return tip("В плейлист", "Плейлист с таким названием не найден.");
-      plAdd(ref, p.id);
-      tip("Готово", "Добавлено в: " + p.name);
-      renderAll();
-    }
-
-    $("#bToPl").addEventListener("click", ()=> addToPlaylistFlow(active));
-
-    $("#bFav").addEventListener("click", ()=>{
-      if(!active) return;
-      const k = refKey(active);
-      if(favs.has(k)) favs.delete(k);
-      else favs.add(k);
-      favSave();
-      renderAll();
-    });
-
-    /* =========================
-       PAGES (5)
-    ========================== */
-    const pages = ["home","library","playlists","queue","settings"];
-    let page = "home";
-    function openPage(p){
-      page = p;
-      document.querySelectorAll(".dockBtn").forEach(b=> b.classList.toggle("active", b.dataset.p===p));
-      renderAll();
-    }
-    document.querySelectorAll(".dockBtn").forEach(b=> b.addEventListener("click", ()=> openPage(b.dataset.p)));
-
-    // Keyboard 1..5 (not while typing)
-    document.addEventListener("keydown", (e)=>{
-      const tag = (document.activeElement?.tagName||"").toLowerCase();
-      const typing = tag==="input" || tag==="textarea" || document.activeElement?.isContentEditable;
-      if(typing) return;
-
-      if(e.key==="1") openPage("home");
-      if(e.key==="2") openPage("library");
-      if(e.key==="3") openPage("playlists");
-      if(e.key==="4") openPage("queue");
-      if(e.key==="5") openPage("settings");
-
-      if(e.key===" "){ // space play/pause
-        e.preventDefault();
-        $("#play").click();
-      }
-    });
-
-    /* =========================
-       IMPORT UI (in Library)
-    ========================== */
-    const inFiles = document.createElement("input");
-    inFiles.type="file"; inFiles.accept="audio/*"; inFiles.multiple=true; inFiles.style.display="none";
-    document.body.appendChild(inFiles);
-
-    const inFolder = document.createElement("input");
-    inFolder.type="file"; inFolder.accept="audio/*"; inFolder.multiple=true; inFolder.webkitdirectory=true; inFolder.directory=true; inFolder.style.display="none";
-    document.body.appendChild(inFolder);
-
-    const inZip = document.createElement("input");
-    inZip.type="file"; inZip.accept=".zip"; inZip.style.display="none";
-    document.body.appendChild(inZip);
-
-    async function importFiles(files){
-      const arr = Array.from(files||[]);
-      if(!arr.length) return;
-      let ok=0;
-      for(const f of arr){
-        if(!f.type.startsWith("audio/")) continue;
-        const p = parseName(f.name);
-        await dbPut({
-          id: "t_" + crypto.randomUUID(),
-          name: f.name,
-          artist: p.artist,
-          title: p.title,
-          type: f.type || "audio/*",
-          size: f.size || 0,
-          createdAt: Date.now(),
-          blob: f
-        });
-        ok++;
-      }
-      await loadLocal();
-      tip("Импорт", "Добавлено: " + ok);
-      renderAll();
-    }
-
-    inFiles.addEventListener("change", async (e)=>{ await importFiles(e.target.files); e.target.value=""; });
-    inFolder.addEventListener("change", async (e)=>{ await importFiles(e.target.files); e.target.value=""; });
-
-    inZip.addEventListener("change", async (e)=>{
-      const f = e.target.files?.[0];
-      if(!f) return;
-      try{
-        const zip = await JSZip.loadAsync(f);
-        const exts = [".mp3",".wav",".ogg",".m4a",".aac",".flac"];
-        const entries = [];
-        for(const [path, ent] of Object.entries(zip.files)){
-          if(ent.dir) continue;
-          const low = path.toLowerCase();
-          if(!exts.some(x=>low.endsWith(x))) continue;
-          entries.push({path, ent});
-        }
-        let ok=0;
-        for(const it of entries){
-          const blob = await it.ent.async("blob");
-          const name = it.path.split("/").pop() || it.path;
-          const p = parseName(name);
-          await dbPut({
-            id: "t_" + crypto.randomUUID(),
-            name,
-            artist: p.artist,
-            title: p.title,
-            type: "audio/*",
-            size: blob.size || 0,
-            createdAt: Date.now(),
-            blob
-          });
-          ok++;
-        }
-        await loadLocal();
-        tip("ZIP", "Добавлено: " + ok);
-        renderAll();
-      }catch{
-        tip("ZIP", "Не удалось прочитать ZIP");
-      }finally{
-        e.target.value="";
-      }
-    });
-
-    /* =========================
-       SETTINGS (23 раза больше по ощущению)
-       (шире диапазоны, больше контролов)
-    ========================== */
-    function setButtons(){
-      $("#tagline").textContent =
-        "медиатека • плейлисты • очереди • эффекты • " +
-        (SMART.on ? "SmartMix ON" : "SmartMix OFF");
-      setMode(SMART.focus ? "Focus" : (SMART.on ? "SmartMix" : "Normal"));
-    }
-
-    $("#bHelp").addEventListener("click", ()=> tip(
-      "Клавиши",
-      "1 Главная\n2 Библиотека\n3 Плейлисты\n4 Очередь\n5 Настройки\nПробел: play/pause"
-    ));
-    $("#bSettings").addEventListener("click", ()=> openPage("settings"));
-
-    /* =========================
-       UI RENDER
-    ========================== */
-    function matchTrack(t, q){
-      if(!q) return true;
-      const s = (t.artist+" "+t.title).toLowerCase();
-      return s.includes(q);
-    }
-
-    function renderLeft(){
-      const left = $("#leftSlot");
-      if(page==="home"){
-        left.innerHTML = `
-          <h2 class="bigTitle">Рассветный пульт</h2>
-          <p class="subText">быстрые режимы + эффекты + старт</p>
-
-          <div class="cards">
-            <div class="card" id="cStart">
-              <div class="t">Стартовать микс</div>
-              <div class="d">SmartMix / очередь / плейлист</div>
-              <div class="mini">
-                <button class="btn primary" id="bMix">Запуск</button>
-                <button class="btn" id="bSmart">${SMART.on ? "SmartMix: ON" : "SmartMix: OFF"}</button>
-                <button class="btn ghost" id="bFocus">${SMART.focus ? "Focus: ON" : "Focus: OFF"}</button>
-              </div>
-            </div>
-
-            <div class="card" id="cImport">
-              <div class="t">Добавить треки</div>
-              <div class="d">файлы / папка / zip</div>
-              <div class="mini">
-                <button class="btn primary" id="bFiles">Файлы</button>
-                <button class="btn" id="bFolder">Папка</button>
-                <button class="btn" id="bZip">ZIP</button>
-              </div>
-            </div>
-
-            <div class="card" id="cMood">
-              <div class="t">Настроить настроение</div>
-              <div class="d">ярко ↔ спокойно</div>
-              <div class="mini">
-                <button class="btn" id="bMood">Открыть</button>
-                <button class="btn ghost" id="bFxTip">?</button>
-              </div>
-            </div>
-          </div>
-        `;
-
-        $("#bMix").addEventListener("click", ()=>{
-          const list = getNavList();
-          if(list.length) playTrack(list[0]);
-        });
-        $("#bSmart").addEventListener("click", ()=>{
-          SMART.on = SMART.on ? 0 : 1;
-          lsSet(LS.smart, String(SMART.on));
-          setButtons();
-          renderAll();
-        });
-        $("#bFocus").addEventListener("click", ()=>{
-          SMART.focus = SMART.focus ? 0 : 1;
-          lsSet("krs_focus_v1", String(SMART.focus));
-          setButtons();
-          renderAll();
-        });
-        $("#bFiles").addEventListener("click", ()=> inFiles.click());
-        $("#bFolder").addEventListener("click", ()=> inFolder.click());
-        $("#bZip").addEventListener("click", ()=> inZip.click());
-        $("#bMood").addEventListener("click", ()=> openPage("settings"));
-        $("#bFxTip").addEventListener("click", ()=> tip(
-          "Эффекты",
-          "Дождь падает поверх интерфейса.\nРассвет плавно двигается.\nМожно выключить motion, если надо."
-        ));
-        return;
-      }
-
-      if(page==="library"){
-        left.innerHTML = `
-          <h2 class="bigTitle">Импорт и чистка</h2>
-          <p class="subText">Local хранится в браузере. Repo — файлы в репозитории.</p>
-
-          <div class="cards">
-            <div class="card">
-              <div class="t">Импорт</div>
-              <div class="d">Добавить сразу много</div>
-              <div class="mini">
-                <button class="btn primary" id="lf">Файлы</button>
-                <button class="btn" id="ld">Папка</button>
-                <button class="btn" id="lz">ZIP</button>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="t">Очистить Local</div>
-              <div class="d">удалит все локальные треки</div>
-              <div class="mini">
-                <button class="btn ghost" id="clear">Очистить</button>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="t">Repo статус</div>
-              <div class="d">assets/audio/manifest.json</div>
-              <div class="mini">
-                <span class="pill">Repo: ${repoTracks.length}</span>
-                <span class="pill">Local: ${localTracks.length}</span>
-              </div>
-            </div>
-          </div>
-        `;
-        $("#lf").addEventListener("click", ()=> inFiles.click());
-        $("#ld").addEventListener("click", ()=> inFolder.click());
-        $("#lz").addEventListener("click", ()=> inZip.click());
-        $("#clear").addEventListener("click", async ()=>{
-          if(!confirm("Очистить Local?")) return;
-          stopAll();
-          await dbClear();
-          await loadLocal();
-          renderAll();
-        });
-        return;
-      }
-
-      if(page==="playlists"){
-        plNormalizeAll();
-        const options = pl.items.map(p=> `<div class="card" data-id="${p.id}">
-            <div class="t">${p.name}</div>
-            <div class="d">Треков: ${p.refs.length}</div>
-            <div class="mini">
-              <button class="btn primary" data-act="open">Открыть</button>
-              <button class="btn" data-act="play">Играть</button>
-              <button class="btn ghost" data-act="more">?</button>
-            </div>
-          </div>`).join("");
-
-        left.innerHTML = `
-          <h2 class="bigTitle">Плейлисты</h2>
-          <p class="subText">создать • переименовать • удалить</p>
-
-          <div class="cards">
-            <div class="card">
-              <div class="t">Управление</div>
-              <div class="d">быстро</div>
-              <div class="mini">
-                <button class="btn primary" id="plNew">Новый</button>
-                <button class="btn" id="plRen">Переименовать</button>
-                <button class="btn ghost" id="plDel">Удалить</button>
-              </div>
-            </div>
-            ${options}
-          </div>
-        `;
-
-        $("#plNew").addEventListener("click", ()=>{
-          const name = prompt("Название плейлиста");
-          if(!name) return;
-          const id = "pl_" + crypto.randomUUID();
-          pl.items.push({ id, name: name.trim(), refs: [] });
-          pl.selected = id;
-          plSave();
-          renderAll();
-        });
-
-        $("#plRen").addEventListener("click", ()=>{
-          const p = plGet(pl.selected);
-          if(!p || p.id==="pl_all") return tip("Переименовать", "Это системный плейлист.");
-          const name = prompt("Новое имя", p.name);
-          if(!name) return;
-          p.name = name.trim();
-          plSave();
-          renderAll();
-        });
-
-        $("#plDel").addEventListener("click", ()=>{
-          const p = plGet(pl.selected);
-          if(!p || p.id==="pl_all") return tip("Удалить", "Это системный плейлист.");
-          if(!confirm("Удалить плейлист: " + p.name + " ?")) return;
-          pl.items = pl.items.filter(x=>x.id!==p.id);
-          pl.selected = "pl_all";
-          plSave();
-          renderAll();
-        });
-
-        left.querySelectorAll(".card[data-id]").forEach(card=>{
-          const id = card.getAttribute("data-id");
-          card.querySelectorAll("button").forEach(btn=>{
-            btn.addEventListener("click",(e)=>{
-              e.stopPropagation();
-              const act = btn.getAttribute("data-act");
-              if(act==="open"){
-                pl.selected = id;
-                plSave();
-                renderAll();
-              }
-              if(act==="play"){
-                const p = plGet(id);
-                if(p?.refs?.length) playTrack(p.refs[0]);
-              }
-              if(act==="more"){
-                tip("Плейлист", "Добавляй треки через кнопку “В плейлист” в плеере или у трека.\nИзбранное — это плейлист pl_fav.");
-              }
-            });
-          });
-          card.addEventListener("click", ()=>{
-            pl.selected = id;
-            plSave();
-            renderAll();
-          });
-        });
-        return;
-      }
-
-      if(page==="queue"){
-        left.innerHTML = `
-          <h2 class="bigTitle">Очередь</h2>
-          <p class="subText">первым играет очередь. если пусто — SmartMix/плейлист</p>
-
-          <div class="cards">
-            <div class="card">
-              <div class="t">Управление очередью</div>
-              <div class="d">добавлять/чистить</div>
-              <div class="mini">
-                <button class="btn primary" id="qPlay">Играть с начала</button>
-                <button class="btn" id="qClear">Очистить</button>
-                <button class="btn ghost" id="qTip">?</button>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="t">SmartMix</div>
-              <div class="d">если очередь пустая</div>
-              <div class="mini">
-                <button class="btn" id="qSmart">${SMART.on ? "SmartMix: ON" : "SmartMix: OFF"}</button>
-                <button class="btn ghost" id="qFocus">${SMART.focus ? "Focus: ON" : "Focus: OFF"}</button>
-              </div>
-            </div>
-          </div>
-        `;
-
-        $("#qPlay").addEventListener("click", ()=>{
-          if(queue.length) playTrack(queue[0]);
-          else{
-            const list = getNavList();
-            if(list.length) playTrack(list[0]);
-          }
-        });
-        $("#qClear").addEventListener("click", ()=>{
-          if(!confirm("Очистить очередь?")) return;
-          queueClear();
-          renderAll();
-        });
-        $("#qTip").addEventListener("click", ()=> tip("Очередь", "Добавить трек в очередь можно из Библиотеки (кнопка “В очередь”)."));
-
-        $("#qSmart").addEventListener("click", ()=>{
-          SMART.on = SMART.on ? 0 : 1;
-          lsSet(LS.smart, String(SMART.on));
-          setButtons();
-          renderAll();
-        });
-        $("#qFocus").addEventListener("click", ()=>{
-          SMART.focus = SMART.focus ? 0 : 1;
-          lsSet("krs_focus_v1", String(SMART.focus));
-          setButtons();
-          renderAll();
-        });
-        return;
-      }
-
-      if(page==="settings"){
-        const ui = parseFloat(getComputedStyle(root).getPropertyValue("--ui"));
-        const glass = parseFloat(getComputedStyle(root).getPropertyValue("--glass"));
-        const bg = parseInt(document.body.getAttribute("data-bg"),10) || 3;
-
-        const rainOn = parseInt(getComputedStyle(root).getPropertyValue("--rainOn"),10) || 0;
-        const rainCount = parseInt(getComputedStyle(root).getPropertyValue("--rainCount"),10) || 0;
-        const rainSize = parseFloat(getComputedStyle(root).getPropertyValue("--rainSize")) || 1.0;
-        const rainSpeed = parseFloat(getComputedStyle(root).getPropertyValue("--rainSpeed")) || 1.0;
-
-        const sunOn = parseInt(getComputedStyle(root).getPropertyValue("--sunOn"),10) || 0;
-        const sunPower = parseFloat(getComputedStyle(root).getPropertyValue("--sunPower")) || 1.0;
-
-        const motion = parseInt(getComputedStyle(root).getPropertyValue("--motion"),10) || 1;
-
-        left.innerHTML = `
-          <h2 class="bigTitle">Настройки</h2>
-          <p class="subText">масштаб + стекло + цвет + 12 фонов + эффекты</p>
-
-          <div class="cards">
-
-            <div class="card">
-              <div class="t">Размеры</div>
-              <div class="d">очень широкий диапазон</div>
-              <div class="mini">
-                <span class="pill">UI: <b id="uiVal">${ui.toFixed(2)}</b></span>
-              </div>
-              <div class="meter">
-                <span>UI</span>
-                <input id="sUI" type="range" min="1.20" max="3.60" step="0.01" value="${ui}">
-              </div>
-              <div class="meter">
-                <span>Стекло</span>
-                <input id="sGlass" type="range" min="0.30" max="0.88" step="0.01" value="${glass}">
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="t">Цвет</div>
-              <div class="d">акцент интерфейса</div>
-              <div class="mini">
-                <input id="sAccent" type="color" value="${getComputedStyle(root).getPropertyValue("--accent").trim()}" style="width:calc(70px * var(--ui));height:calc(52px * var(--ui));border:none;background:transparent;cursor:pointer;">
-                <button class="btn ghost" id="sColorTip">?</button>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="t">Фон</div>
-              <div class="d">12 пресетов</div>
-              <div class="mini">
-                <span class="pill">Preset: <b id="bgVal">${bg}</b></span>
-              </div>
-              <div class="meter">
-                <span>Preset</span>
-                <input id="sBG" type="range" min="1" max="12" step="1" value="${bg}">
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="t">Рассвет</div>
-              <div class="d">плавная подсветка</div>
-              <div class="mini">
-                <button class="btn" id="sunT">${sunOn ? "Рассвет: ON" : "Рассвет: OFF"}</button>
-                <button class="btn ghost" id="sunTip">?</button>
-              </div>
-              <div class="meter">
-                <span>Сила</span>
-                <input id="sSun" type="range" min="0" max="1" step="0.01" value="${sunPower}">
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="t">Дождь</div>
-              <div class="d">капли прямо на экран</div>
-              <div class="mini">
-                <button class="btn" id="rainT">${rainOn ? "Дождь: ON" : "Дождь: OFF"}</button>
-                <button class="btn ghost" id="rainTip">?</button>
-              </div>
-              <div class="meter">
-                <span>Капли</span>
-                <input id="sRain" type="range" min="0" max="260" step="1" value="${rainCount}">
-              </div>
-              <div class="meter">
-                <span>Размер</span>
-                <input id="sRainSize" type="range" min="0.70" max="1.80" step="0.01" value="${rainSize}">
-              </div>
-              <div class="meter">
-                <span>Скорость</span>
-                <input id="sRainSpeed" type="range" min="0.60" max="2.00" step="0.01" value="${rainSpeed}">
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="t">Умные режимы</div>
-              <div class="d">SmartMix + Focus + таймер</div>
-              <div class="mini">
-                <button class="btn" id="smartT">${SMART.on ? "SmartMix: ON" : "SmartMix: OFF"}</button>
-                <button class="btn" id="focusT">${SMART.focus ? "Focus: ON" : "Focus: OFF"}</button>
-                <button class="btn ghost" id="smartTip">?</button>
-              </div>
-              <div class="meter">
-                <span>Mood</span>
-                <input id="sMood" type="range" min="0" max="100" step="1" value="${SMART.mood}">
-              </div>
-              <div class="meter">
-                <span>Sleep (мин)</span>
-                <input id="sTimer" type="range" min="0" max="120" step="5" value="${SMART.timerMin}">
-              </div>
-              <div class="meter">
-                <span>Motion</span>
-                <input id="sMotion" type="range" min="0" max="1" step="1" value="${motion}">
-              </div>
-            </div>
-          </div>
-        `;
-
-        $("#sUI").addEventListener("input",(e)=>{
-          applyVar("--ui", e.target.value);
-          $("#uiVal").textContent = parseFloat(e.target.value).toFixed(2);
-          lsSet(LS.ui, e.target.value);
-        });
-
-        $("#sGlass").addEventListener("input",(e)=>{
-          applyVar("--glass", e.target.value);
-          lsSet(LS.glass, e.target.value);
-        });
-
-        $("#sAccent").addEventListener("input",(e)=>{
-          applyVar("--accent", e.target.value);
-          lsSet(LS.accent, e.target.value);
-        });
-
-        $("#sColorTip").addEventListener("click", ()=> tip("Цвет", "Меняет кнопки, акценты, подсветки."));
-
-        $("#sBG").addEventListener("input",(e)=>{
-          const v = e.target.value;
-          document.body.setAttribute("data-bg", v);
-          $("#bgVal").textContent = v;
-          lsSet(LS.bg, v);
-        });
-
-        $("#sunT").addEventListener("click", ()=>{
-          const cur = parseInt(getComputedStyle(root).getPropertyValue("--sunOn"))===1;
-          const next = cur ? 0 : 1;
-          applyVar("--sunOn", next);
-          lsSet(LS.sunOn, next);
-          renderAll();
-        });
-
-        $("#sSun").addEventListener("input",(e)=>{
-          applyVar("--sunPower", e.target.value);
-          lsSet(LS.sunPower, e.target.value);
-        });
-
-        $("#sunTip").addEventListener("click", ()=> tip("Рассвет", "Плавная подсветка и движение слоя."));
-
-        $("#rainT").addEventListener("click", ()=>{
-          const cur = parseInt(getComputedStyle(root).getPropertyValue("--rainOn"))===1;
-          const next = cur ? 0 : 1;
-          applyVar("--rainOn", next);
-          lsSet(LS.rainOn, next);
-          rebuildRain();
-          renderAll();
-        });
-
-        $("#sRain").addEventListener("input",(e)=>{
-          applyVar("--rainCount", e.target.value);
-          lsSet(LS.rainCount, e.target.value);
-          rebuildRain();
-        });
-
-        $("#sRainSize").addEventListener("input",(e)=>{
-          applyVar("--rainSize", e.target.value);
-          lsSet(LS.rainSize, e.target.value);
-          rebuildRain();
-        });
-
-        $("#sRainSpeed").addEventListener("input",(e)=>{
-          applyVar("--rainSpeed", e.target.value);
-          lsSet(LS.rainSpeed, e.target.value);
-          rebuildRain();
-        });
-
-        $("#rainTip").addEventListener("click", ()=> tip("Дождь", "Капли падают поверх всего интерфейса."));
-
-        $("#smartT").addEventListener("click", ()=>{
-          SMART.on = SMART.on ? 0 : 1;
-          lsSet(LS.smart, String(SMART.on));
-          setButtons();
-          renderAll();
-        });
-
-        $("#focusT").addEventListener("click", ()=>{
-          SMART.focus = SMART.focus ? 0 : 1;
-          lsSet("krs_focus_v1", String(SMART.focus));
-          setButtons();
-          renderAll();
-        });
-
-        $("#sMood").addEventListener("input",(e)=>{
-          SMART.mood = parseInt(e.target.value,10) || 0;
-          lsSet("krs_mood_v1", String(SMART.mood));
-          setButtons();
-          renderAll();
-        });
-
-        $("#sTimer").addEventListener("input",(e)=>{
-          const v = parseInt(e.target.value,10) || 0;
-          setSleepTimer(v);
-          renderAll();
-        });
-
-        $("#sMotion").addEventListener("input",(e)=>{
-          const v = parseInt(e.target.value,10) || 0;
-          applyVar("--motion", v);
-          lsSet(LS.motion, String(v));
-        });
-
-        $("#smartTip").addEventListener("click", ()=> tip(
-          "SmartMix / Focus / Таймер",
-          "SmartMix: сортирует выдачу (избранное выше + лёгкий bias по mood).\nFocus: по окончанию трека не включает следующий.\nSleep: остановит музыку через N минут."
-        ));
-
-        return;
-      }
-    }
-
-    function renderCenter(){
-      const c = $("#centerSlot");
-      const q = ($("#q").value||"").trim().toLowerCase();
-
-      if(page==="home"){
-        c.innerHTML = `
-          <div class="hero">
-            <h1>Новый релиз дизайна</h1>
-            <p>Три панели • очередь • SmartMix • Focus • дождь на экран • 12 фонов • огромные размеры</p>
-          </div>
-
-          <div class="grid2">
-            <div class="panel">
-              <h3>Коротко</h3>
-              <div class="note">
-                Repo: <b>${repoTracks.length}</b> • Local: <b>${localTracks.length}</b> • В очереди: <b>${queue.length}</b><br>
-                Избранное: <b>${favs.size}</b> • SmartMix: <b>${SMART.on ? "ON" : "OFF"}</b> • Focus: <b>${SMART.focus ? "ON" : "OFF"}</b>
-              </div>
-            </div>
-
-            <div class="panel">
-              <h3>Быстрые подсказки</h3>
-              <div class="note">
-                1–5 переключают вкладки.<br>
-                Пробел — play/pause.<br>
-                В библиотеке: “В очередь”, “В плейлист”, “♡”.
-              </div>
-            </div>
-          </div>
-
-          <div class="panel" style="margin-top:calc(14px * var(--ui));">
-            <h3>Недавние Local</h3>
-            <div class="list" id="recent"></div>
-          </div>
-        `;
-        renderRecent();
-        return;
-      }
-
-      if(page==="library"){
-        const all = getAllTracks().filter(t=> matchTrack(t,q));
-        c.innerHTML = `
-          <div class="hero">
-            <h1>Библиотека</h1>
-            <p>Один активный трек: новый запуск останавливает старый</p>
-          </div>
-
-          <div class="panel" style="margin-top:calc(14px * var(--ui));">
-            <h3>Треки</h3>
-            <div class="list" id="tracks"></div>
-          </div>
-        `;
-        renderTracksList(all);
-        return;
-      }
-
-      if(page==="playlists"){
-        plNormalizeAll();
-        const cur = plGet(pl.selected);
-        const refs = (cur?.id==="pl_all") ? getAllTracks().map(t=>({kind:t.kind,id:t.id})) : (cur?.refs||[]);
-        c.innerHTML = `
-          <div class="hero">
-            <h1>${cur ? cur.name : "Плейлист"}</h1>
-            <p>${cur ? ("Треков: "+refs.length) : ""}</p>
-          </div>
-
-          <div class="panel" style="margin-top:calc(14px * var(--ui));">
-            <h3>Содержимое</h3>
-            <div class="list" id="plTracks"></div>
-          </div>
-        `;
-        renderPlaylistTracks(cur, refs, q);
-        return;
-      }
-
-      if(page==="queue"){
-        c.innerHTML = `
-          <div class="hero">
-            <h1>Очередь</h1>
-            <p>Если очередь не пустая — навигация (⏮/⏭) идёт по ней</p>
-          </div>
-
-          <div class="panel" style="margin-top:calc(14px * var(--ui));">
-            <h3>Список</h3>
-            <div class="list" id="qList"></div>
-          </div>
-        `;
-        renderQueueList(q);
-        return;
-      }
-
-      if(page==="settings"){
-        c.innerHTML = `
-          <div class="hero">
-            <h1>Настройки</h1>
-            <p>вся настройка слева (огромная). тут просто статус</p>
-          </div>
-
-          <div class="panel" style="margin-top:calc(14px * var(--ui));">
-            <h3>Сохранение</h3>
-            <div class="note">
-              Local треки: IndexedDB<br>
-              Настройки/плейлисты/очередь/избранное: LocalStorage
-            </div>
-          </div>
-        `;
-        return;
-      }
-    }
-
-    function renderRight(){
-      const rt = $("#rightTop");
-      const rb = $("#rightBottom");
-      const q = ($("#q").value||"").trim().toLowerCase();
-
-      // TOP: “Now + actions”
-      const favOn = active ? favs.has(refKey(active)) : false;
-      rt.innerHTML = `
-        <h2 class="bigTitle" style="margin-bottom:calc(10px * var(--ui));">Сейчас</h2>
-        <div class="note">
-          <b>${$("#tName").textContent}</b><br>
-          ${$("#tArtist").textContent}
-        </div>
-        <div class="meter">
-          <span>Громкость</span>
-          <input id="vol" type="range" min="0" max="1" step="0.01" value="${audio.volume || 1}">
-        </div>
-        <div class="meter">
-          <span>Позиция</span>
-          <input id="pos" type="range" min="0" max="1" step="0.001" value="0">
-        </div>
-        <div style="margin-top:calc(12px * var(--ui));display:flex;gap:calc(10px * var(--ui));flex-wrap:wrap;">
-          <button class="btn primary" id="addQueue">В очередь</button>
-          <button class="btn" id="addPl">В плейлист</button>
-          <button class="btn ghost" id="favBtn">${favOn ? "♥" : "♡"}</button>
-          <button class="btn ghost" id="why">?</button>
-        </div>
-      `;
-
-      const vol = $("#vol");
-      vol.addEventListener("input", ()=> { audio.volume = parseFloat(vol.value); });
-
-      const pos = $("#pos");
-      function updPos(){
-        if(!audio.duration || !isFinite(audio.duration)) { pos.value = 0; return; }
-        pos.value = (audio.currentTime / audio.duration).toFixed(3);
-      }
-      audio.addEventListener("timeupdate", updPos, { passive:true });
-      pos.addEventListener("input", ()=>{
-        if(!audio.duration || !isFinite(audio.duration)) return;
-        audio.currentTime = parseFloat(pos.value) * audio.duration;
-      });
-
-      $("#addQueue").addEventListener("click", ()=>{
-        if(!active) return tip("Очередь", "Сначала выбери трек.");
-        queuePush(active);
-        renderAll();
-      });
-      $("#addPl").addEventListener("click", ()=> addToPlaylistFlow(active));
-      $("#favBtn").addEventListener("click", ()=>{
-        if(!active) return;
-        const k = refKey(active);
-        if(favs.has(k)) favs.delete(k);
-        else favs.add(k);
-        favSave();
-        renderAll();
-      });
-      $("#why").addEventListener("click", ()=> tip(
-        "Этот блок",
-        "Тут быстрые действия над активным треком.\nПозиция доступна только для Local/Repo audio."
-      ));
-
-      // BOTTOM: “Smart panel”
-      const all = getAllTracks();
-      const found = all.filter(t=> matchTrack(t,q)).length;
-
-      rb.innerHTML = `
-        <h2 class="bigTitle" style="margin-bottom:calc(10px * var(--ui));">Смарт-панель</h2>
-
-        <div class="note">
-          Найдено по поиску: <b>${found}</b><br>
-          Mood: <b>${SMART.mood}</b> • Таймер: <b>${SMART.timerMin} мин</b><br>
-          Очередь: <b>${queue.length}</b> • Избранное: <b>${favs.size}</b>
-        </div>
-
-        <div style="margin-top:calc(12px * var(--ui));display:flex;gap:calc(10px * var(--ui));flex-wrap:wrap;">
-          <button class="btn" id="toggleSmart">${SMART.on ? "SmartMix: ON" : "SmartMix: OFF"}</button>
-          <button class="btn ghost" id="toggleFocus">${SMART.focus ? "Focus: ON" : "Focus: OFF"}</button>
-          <button class="btn ghost" id="jumpFav">Показать избранное</button>
-          <button class="btn ghost" id="jumpQueue">Показать очередь</button>
-        </div>
-
-        <div class="note" style="margin-top:calc(12px * var(--ui));">
-          Repo читается из <b>assets/audio/manifest.json</b><br>
-          Local добавляется через импорт
-        </div>
-      `;
-
-      $("#toggleSmart").addEventListener("click", ()=>{
-        SMART.on = SMART.on ? 0 : 1;
-        lsSet(LS.smart, String(SMART.on));
-        setButtons();
-        renderAll();
-      });
-      $("#toggleFocus").addEventListener("click", ()=>{
-        SMART.focus = SMART.focus ? 0 : 1;
-        lsSet("krs_focus_v1", String(SMART.focus));
-        setButtons();
-        renderAll();
-      });
-      $("#jumpFav").addEventListener("click", ()=>{
-        pl.selected = "pl_fav";
-        plSave();
-        openPage("playlists");
-      });
-      $("#jumpQueue").addEventListener("click", ()=> openPage("queue"));
-    }
-
-    function renderRecent(){
-      const box = document.getElementById("recent");
-      if(!box) return;
-      box.innerHTML = "";
-      const items = localTracks.slice(0, 6);
-      if(!items.length){
-        box.innerHTML = `<div class="note">Пока пусто. Добавь треки во вкладке “Библиотека”.</div>`;
-        return;
-      }
-      for(const t of items){
-        const el = document.createElement("div");
-        const isActive = active && active.kind==="local" && active.id===t.id;
-        el.className = "item" + (isActive ? " active":"");
-        el.innerHTML = `
-          <div class="t">${t.artist} — ${t.title}</div>
-          <div class="d">Local • ${fmtBytes(t.size)}</div>
-          <div style="margin-top:calc(14px * var(--ui));display:flex;gap:calc(10px * var(--ui));flex-wrap:wrap;">
-            <button class="btn primary">Играть</button>
-            <button class="btn">В очередь</button>
-            <button class="btn">В плейлист</button>
-            <button class="btn ghost">${favs.has("local:"+t.id) ? "♥" : "♡"}</button>
-            <button class="btn ghost">?</button>
-          </div>
-        `;
-        const btns = el.querySelectorAll("button");
-        btns[0].addEventListener("click",(e)=>{ e.stopPropagation(); playTrack({kind:"local", id:t.id}); });
-        btns[1].addEventListener("click",(e)=>{ e.stopPropagation(); queuePush({kind:"local", id:t.id}); renderAll(); });
-        btns[2].addEventListener("click",(e)=>{ e.stopPropagation(); addToPlaylistFlow({kind:"local", id:t.id}); });
-        btns[3].addEventListener("click",(e)=>{
-          e.stopPropagation();
-          const k="local:"+t.id;
-          if(favs.has(k)) favs.delete(k); else favs.add(k);
-          favSave(); renderAll();
-        });
-        btns[4].addEventListener("click",(e)=>{ e.stopPropagation(); tip("Трек", t.artist+" — "+t.title); });
-
-        el.addEventListener("click", ()=> playTrack({kind:"local", id:t.id}));
-        box.appendChild(el);
-      }
-    }
-
-    function renderTracksList(all){
-      const box = document.getElementById("tracks");
-      if(!box) return;
-      box.innerHTML = "";
-      if(!all.length){
-        box.innerHTML = `<div class="note">Ничего не найдено</div>`;
-        return;
-      }
-
-      for(const t of all){
-        const isActive = active && active.kind===t.kind && active.id===t.id;
-        const key = refKey({kind:t.kind, id:t.id});
-        const label = (t.kind==="repo")
-          ? ("Repo • " + t.artist)
-          : ("Local • " + t.artist + " • " + fmtBytes(t.size||0));
-
-        const el = document.createElement("div");
-        el.className = "item" + (isActive ? " active":"");
-        el.innerHTML = `
-          <div class="t">${t.artist} — ${t.title}</div>
-          <div class="d">${label}</div>
-          <div style="margin-top:calc(14px * var(--ui));display:flex;gap:calc(10px * var(--ui));flex-wrap:wrap;">
-            <button class="btn primary">Играть</button>
-            <button class="btn">В очередь</button>
-            <button class="btn">В плейлист</button>
-            <button class="btn ghost">${favs.has(key) ? "♥" : "♡"}</button>
-            <button class="btn ghost">?</button>
-          </div>
-        `;
-        const btns = el.querySelectorAll("button");
-        btns[0].addEventListener("click",(e)=>{ e.stopPropagation(); playTrack({kind:t.kind, id:t.id}); });
-        btns[1].addEventListener("click",(e)=>{ e.stopPropagation(); queuePush({kind:t.kind, id:t.id}); renderAll(); });
-        btns[2].addEventListener("click",(e)=>{ e.stopPropagation(); addToPlaylistFlow({kind:t.kind, id:t.id}); });
-        btns[3].addEventListener("click",(e)=>{
-          e.stopPropagation();
-          if(favs.has(key)) favs.delete(key); else favs.add(key);
-          favSave(); renderAll();
-        });
-        btns[4].addEventListener("click",(e)=>{ e.stopPropagation(); tip("Трек", t.artist+" — "+t.title); });
-
-        el.addEventListener("click", ()=> playTrack({kind:t.kind, id:t.id}));
-        box.appendChild(el);
-      }
-    }
-
-    function renderPlaylistTracks(cur, refs, q){
-      const box = document.getElementById("plTracks");
-      if(!box) return;
-      box.innerHTML = "";
-      const filtered = refs
-        .map(r=> ({r, t: byRef(r)}))
-        .filter(x=> x.t && matchTrack(x.t, q));
-
-      if(!filtered.length){
-        box.innerHTML = `<div class="note">Пусто</div>`;
-        return;
-      }
-
-      for(const x of filtered){
-        const t = x.t;
-        const ref = x.r;
-        const isActive = active && refKey(active)===refKey(ref);
-        const label = (ref.kind==="repo")
-          ? ("Repo • " + t.artist)
-          : ("Local • " + t.artist + " • " + fmtBytes(t.size||0));
-        const el = document.createElement("div");
-        el.className = "item" + (isActive ? " active":"");
-        el.innerHTML = `
-          <div class="t">${t.artist} — ${t.title}</div>
-          <div class="d">${label}</div>
-          <div style="margin-top:calc(14px * var(--ui));display:flex;gap:calc(10px * var(--ui));flex-wrap:wrap;">
-            <button class="btn primary">Играть</button>
-            <button class="btn">В очередь</button>
-            <button class="btn ghost">${cur && cur.id!=="pl_all" ? "Убрать" : "?"}</button>
-          </div>
-        `;
-        const btns = el.querySelectorAll("button");
-        btns[0].addEventListener("click",(e)=>{ e.stopPropagation(); playTrack(ref); });
-        btns[1].addEventListener("click",(e)=>{ e.stopPropagation(); queuePush(ref); renderAll(); });
-
-        btns[2].addEventListener("click",(e)=>{
-          e.stopPropagation();
-          if(cur && cur.id!=="pl_all"){
-            plRemove(ref, cur.id);
-            renderAll();
-          }else{
-            tip("Плейлист", "Это системный список.");
-          }
-        });
-
-        el.addEventListener("click", ()=> playTrack(ref));
-        box.appendChild(el);
-      }
-    }
-
-    function renderQueueList(q){
-      const box = document.getElementById("qList");
-      if(!box) return;
-      box.innerHTML = "";
-
-      const items = queue
-        .map(r=> ({r, t: byRef(r)}))
-        .filter(x=> x.t && matchTrack(x.t, q));
-
-      if(!items.length){
-        box.innerHTML = `<div class="note">Очередь пустая</div>`;
-        return;
-      }
-
-      for(const x of items){
-        const t = x.t;
-        const ref = x.r;
-        const isActive = active && refKey(active)===refKey(ref);
-
-        const el = document.createElement("div");
-        el.className = "item" + (isActive ? " active":"");
-        el.innerHTML = `
-          <div class="t">${t.artist} — ${t.title}</div>
-          <div class="d">${ref.kind==="repo" ? "Repo" : "Local"}</div>
-          <div style="margin-top:calc(14px * var(--ui));display:flex;gap:calc(10px * var(--ui));flex-wrap:wrap;">
-            <button class="btn primary">Играть</button>
-            <button class="btn ghost">Удалить</button>
-          </div>
-        `;
-        const btns = el.querySelectorAll("button");
-        btns[0].addEventListener("click",(e)=>{ e.stopPropagation(); playTrack(ref); });
-        btns[1].addEventListener("click",(e)=>{ e.stopPropagation(); queueRemove(ref); renderAll(); });
-        el.addEventListener("click", ()=> playTrack(ref));
-        box.appendChild(el);
-      }
-    }
-
-    function renderPlayerBadges(){
-      const k = active ? refKey(active) : null;
-      const favOn = k ? favs.has(k) : false;
-      $("#bFav").textContent = favOn ? "♥" : "♡";
-      setButtons();
-    }
-
-    function renderAll(){
-      renderLeft();
-      renderCenter();
-      renderRight();
-      renderPlayerBadges();
-    }
-
-    $("#q").addEventListener("input", ()=> renderAll());
-
-    /* =========================
-       SETTINGS INIT + BUTTONS
-    ========================== */
-    setButtons();
-
-    /* =========================
-       INIT
-    ========================== */
-    (async ()=>{
-      $("#ver").textContent = "REL-2026-NEO";
-      setSrc(SOURCE.NONE);
-
-      await loadRepo();
-      await loadLocal();
-      plNormalizeAll();
-      plSave();
-
-      rebuildRain();
-      setSleepTimer(SMART.timerMin);
-
-      openPage("home");
-      renderAll();
-    })();
-  </script>
 </body>
 </html>
